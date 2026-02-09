@@ -40,6 +40,12 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'spaces' => $request->user() ? $request->user()->spaces()->with(['projects' => function ($query) {
+                    $query->select('id', 'name', 'slug', 'color', 'space_id');
+                }])->get(['spaces.id', 'spaces.name', 'spaces.slug', 'spaces.color']) : [],
+                'can_manage' => $request->user() && $request->route('space') instanceof \App\Models\Space
+                    ? $request->user()->canManageSpace($request->route('space'))
+                    : false,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
