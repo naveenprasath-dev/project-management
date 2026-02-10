@@ -133,6 +133,25 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
         </div>
     );
 
+    const renderFormattedContent = (content: string) => {
+        if (!content) return null;
+
+        const parts = content.split(/(@\[[^\]]+\]\([^)]+\))/g);
+
+        return parts.map((part, index) => {
+            const match = part.match(/@\[([^\]]+)\]\(([^)]+)\)/);
+            if (match) {
+                const display = match[1];
+                return (
+                    <span key={index} className="text-primary font-bold bg-primary/10 px-1 rounded-md inline-block">
+                        @{display}
+                    </span>
+                );
+            }
+            return part;
+        });
+    };
+
     const { data, setData, post, patch, processing, reset, errors } = useForm({
         title: '',
         description: '',
@@ -332,11 +351,16 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
                                     <div className="grid gap-3">
                                         <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
-                                        <div className="rounded-xl border-2 focus-within:border-primary transition-all bg-background overflow-hidden relative" onKeyDown={(e) => e.stopPropagation()}>
+                                        <div className="rounded-xl border-2 focus-within:border-primary transition-all bg-background relative">
                                             <MentionsInput
                                                 id="description"
                                                 value={data.description}
                                                 onChange={(e) => setData('description', e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+                                                        e.stopPropagation();
+                                                    }
+                                                }}
                                                 placeholder="Add more context, requirements, or instructions (Markdown supported)..."
                                                 style={mentionStyles}
                                                 className="description-mentions"
@@ -361,10 +385,15 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                             </div>
 
                                             <div className="flex gap-4 items-start">
-                                                <div className="flex-1 rounded-xl border-2 focus-within:border-primary transition-all bg-background overflow-hidden relative min-h-[100px]" onKeyDown={(e) => e.stopPropagation()}>
+                                                <div className="flex-1 rounded-xl border-2 focus-within:border-primary transition-all bg-background relative min-h-[100px]">
                                                     <MentionsInput
                                                         value={commentContent}
                                                         onChange={(e) => setCommentContent(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+                                                                e.stopPropagation();
+                                                            }
+                                                        }}
                                                         placeholder="Write a comment... use @ to tag someone"
                                                         style={mentionStyles}
                                                         className="comment-mentions"
@@ -417,7 +446,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                                                 </span>
                                                             </div>
                                                             <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                                                                {comment.content}
+                                                                {renderFormattedContent(comment.content)}
                                                             </div>
                                                         </div>
                                                     ))
