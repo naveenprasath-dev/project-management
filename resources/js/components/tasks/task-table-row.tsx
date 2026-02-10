@@ -22,10 +22,10 @@ interface Task {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-    low: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
-    medium: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
-    high: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
-    urgent: 'bg-red-100 text-red-700 hover:bg-red-200',
+    low: 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-900/50 dark:text-slate-300',
+    medium: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300',
+    high: 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/50 dark:text-orange-300',
+    urgent: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300',
 };
 
 export default function TaskTableRow({
@@ -55,7 +55,7 @@ export default function TaskTableRow({
     };
 
     return (
-        <div className="group flex items-center px-4 py-3 border-b hover:bg-muted/30 transition-all">
+        <div className="group flex items-center px-4 py-3 border-b border-l-2 border-l-transparent hover:border-l-primary hover:bg-muted/30 transition-all">
             <div className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
                 <GripVertical className="w-4 h-4 text-muted-foreground/40" />
             </div>

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from '@inertiajs/react';
+import { MentionsInput, Mention } from 'react-mentions';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -49,6 +50,88 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
     const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
     const [activities, setActivities] = useState<any[]>([]);
     const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+    const [comments, setComments] = useState<any[]>([]);
+    const [isLoadingComments, setIsLoadingComments] = useState(false);
+    const [commentContent, setCommentContent] = useState('');
+    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+    const mentionData = useMemo(() =>
+        members.map(m => ({ id: m.id.toString(), display: m.name })),
+        [members]
+    );
+
+    const mentionStyles = {
+        control: {
+            backgroundColor: 'transparent',
+            fontSize: 14,
+            fontWeight: 'normal',
+        },
+        '&multiLine': {
+            control: {
+                fontFamily: 'inherit',
+                minHeight: 100,
+            },
+            highlighter: {
+                padding: 12,
+                border: '1px solid transparent',
+                lineHeight: 1.6,
+                fontSize: 14,
+                fontFamily: 'inherit',
+            },
+            input: {
+                padding: 12,
+                outline: 'none',
+                border: 'none',
+                lineHeight: 1.6,
+                fontSize: 14,
+                fontFamily: 'inherit',
+            },
+        },
+        suggestions: {
+            list: {
+                backgroundColor: 'var(--popover)',
+                border: '1px solid var(--border)',
+                fontSize: 14,
+                borderRadius: 8,
+                overflow: 'hidden',
+                boxShadow: '0 4px 24px -4px rgb(0 0 0 / 0.12), 0 2px 8px -2px rgb(0 0 0 / 0.08)',
+                zIndex: 1000,
+                minWidth: 220,
+            },
+            item: {
+                padding: '6px 8px',
+                transition: 'background-color 0.15s ease',
+                '&focused': {
+                    backgroundColor: 'var(--accent)',
+                },
+            },
+        },
+    };
+
+    const renderMentionSuggestion = (suggestion: { id: string; display: string }, _search: string, _highlightedDisplay: React.ReactNode, _index: number, focused: boolean) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 4px' }}>
+            <div style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                backgroundColor: focused ? 'var(--primary)' : 'color-mix(in oklch, var(--primary) 10%, transparent)',
+                color: focused ? 'var(--primary-foreground)' : 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: 'uppercase' as const,
+                flexShrink: 0,
+                transition: 'all 0.15s ease',
+            }}>
+                {suggestion.display.charAt(0)}
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>
+                {suggestion.display}
+            </span>
+        </div>
+    );
 
     const { data, setData, post, patch, processing, reset, errors } = useForm({
         title: '',
@@ -77,6 +160,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
             if (activeTab === 'activity') {
                 fetchActivities();
             }
+            fetchComments();
         } else {
             // Re-initialize for creation
             reset();
@@ -104,6 +188,36 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
             console.error('Failed to fetch activities', error);
         } finally {
             setIsLoadingActivities(false);
+        }
+    };
+
+    const fetchComments = async () => {
+        if (!task) return;
+        setIsLoadingComments(true);
+        try {
+            const response = await axios.get(`/spaces/${space.slug}/tasks/${task.id}/comments`);
+            setComments(response.data);
+        } catch (error) {
+            console.error('Failed to fetch comments', error);
+        } finally {
+            setIsLoadingComments(false);
+        }
+    };
+
+    const handleAddComment = async () => {
+        if (!commentContent.trim() || isSubmittingComment) return;
+
+        setIsSubmittingComment(true);
+        try {
+            const response = await axios.post(`/spaces/${space.slug}/tasks/${task.id}/comments`, {
+                content: commentContent
+            });
+            setComments(prev => [response.data, ...prev]);
+            setCommentContent('');
+        } catch (error) {
+            console.error('Failed to add comment', error);
+        } finally {
+            setIsSubmittingComment(false);
         }
     };
 
@@ -143,8 +257,8 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-5xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-background">
-                <DialogHeader className="p-8 pb-6 border-b bg-muted/20">
+            <DialogContent className="sm:max-w-5xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-background shadow-2xl">
+                <DialogHeader className="p-8 pb-6 border-b bg-gradient-to-b from-muted/30 to-transparent">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <DialogTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
@@ -179,7 +293,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                 <ListTodo className="w-4 h-4" />
                                 Details
                             </span>
-                            {activeTab === 'details' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />}
+                            {activeTab === 'details' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />}
                         </button>
                         <button
                             onClick={() => setActiveTab('activity')}
@@ -192,7 +306,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                 <History className="w-4 h-4" />
                                 Activity History
                             </span>
-                            {activeTab === 'activity' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />}
+                            {activeTab === 'activity' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />}
                         </button>
                     </div>
                 )}
@@ -218,15 +332,99 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
                                     <div className="grid gap-3">
                                         <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
-                                        <Textarea
-                                            id="description"
-                                            value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Add more context, requirements, or instructions (Markdown supported)..."
-                                            rows={12}
-                                            className="resize-none rounded-xl border-2 focus:border-primary p-4 leading-relaxed"
-                                        />
+                                        <div className="rounded-xl border-2 focus-within:border-primary transition-all bg-background overflow-hidden relative" onKeyDown={(e) => e.stopPropagation()}>
+                                            <MentionsInput
+                                                id="description"
+                                                value={data.description}
+                                                onChange={(e) => setData('description', e.target.value)}
+                                                placeholder="Add more context, requirements, or instructions (Markdown supported)..."
+                                                style={mentionStyles}
+                                                className="description-mentions"
+                                            >
+                                                <Mention
+                                                    trigger="@"
+                                                    markup="@[__display__](__id__)"
+                                                    data={mentionData}
+                                                    className="bg-primary/20 text-primary"
+                                                    displayTransform={(id, display) => `@${display}`}
+                                                    renderSuggestion={renderMentionSuggestion}
+                                                />
+                                            </MentionsInput>
+                                        </div>
                                     </div>
+
+                                    {task && (
+                                        <div className="pt-8 border-t space-y-6">
+                                            <div className="flex items-center gap-2">
+                                                <MessageSquare className="w-5 h-5 text-primary" />
+                                                <h3 className="text-sm font-bold uppercase tracking-wider">Comments</h3>
+                                            </div>
+
+                                            <div className="flex gap-4 items-start">
+                                                <div className="flex-1 rounded-xl border-2 focus-within:border-primary transition-all bg-background overflow-hidden relative min-h-[100px]" onKeyDown={(e) => e.stopPropagation()}>
+                                                    <MentionsInput
+                                                        value={commentContent}
+                                                        onChange={(e) => setCommentContent(e.target.value)}
+                                                        placeholder="Write a comment... use @ to tag someone"
+                                                        style={mentionStyles}
+                                                        className="comment-mentions"
+                                                    >
+                                                        <Mention
+                                                            trigger="@"
+                                                            markup="@[__display__](__id__)"
+                                                            data={mentionData}
+                                                            className="bg-primary/20 text-primary"
+                                                            displayTransform={(id, display) => `@${display}`}
+                                                            renderSuggestion={renderMentionSuggestion}
+                                                        />
+                                                    </MentionsInput>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleAddComment}
+                                                    disabled={isSubmittingComment || !commentContent.trim()}
+                                                    className="h-12 px-6 rounded-xl shadow-lg"
+                                                >
+                                                    {isSubmittingComment ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        "Post"
+                                                    )}
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                {isLoadingComments ? (
+                                                    <div className="flex justify-center py-8">
+                                                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                                    </div>
+                                                ) : comments.length === 0 ? (
+                                                    <div className="text-center py-10 bg-muted/5 rounded-xl border border-dashed">
+                                                        <p className="text-sm text-muted-foreground">No comments yet. Start the conversation!</p>
+                                                    </div>
+                                                ) : (
+                                                    comments.map((comment) => (
+                                                        <div key={comment.id} className="bg-muted/20 border rounded-xl p-4 space-y-2">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                                                        <UserIcon className="w-3.5 h-3.5 text-primary" />
+                                                                    </div>
+                                                                    <span className="text-sm font-semibold">{comment.user?.name}</span>
+                                                                </div>
+                                                                <span className="text-[10px] text-muted-foreground font-bold">
+                                                                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                                                                {comment.content}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </form>
                         ) : (
@@ -276,7 +474,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                     </div>
 
                     {/* Sidebar Area */}
-                    <div className="w-80 bg-muted/10 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                    <div className="w-80 bg-muted/10 overflow-y-auto p-6 space-y-8 custom-scrollbar border-l border-border/60">
                         <div className="space-y-6">
                             <div className="grid gap-3">
                                 <Label htmlFor="status_id" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
@@ -463,12 +661,12 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
                 <DialogFooter className="p-8 border-t bg-muted/20 backdrop-blur-sm sm:justify-end">
                     <div className="flex gap-4">
-                        <Button type="button" variant="ghost" onClick={onClose} className="h-12 px-8 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-muted">Cancel</Button>
+                        <Button type="button" variant="ghost" onClick={onClose} className="h-10 px-8 font-medium rounded-lg hover:bg-muted">Cancel</Button>
                         <Button
                             type="submit"
                             form="task-form"
                             disabled={processing || activeTab === 'activity'}
-                            className="h-12 px-10 font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95"
+                            className="h-10 px-8 font-medium rounded-lg shadow-md shadow-primary/15 hover:shadow-primary/25 transition-all active:scale-95"
                         >
                             {processing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             {task ? 'Save Changes' : 'Create Task'}

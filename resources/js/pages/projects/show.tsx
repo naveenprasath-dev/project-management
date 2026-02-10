@@ -238,7 +238,7 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                         </div>
                         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-primary transition-all duration-300"
+                                className="h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500"
                                 style={{ width: `${completionPercentage}%` }}
                             />
                         </div>

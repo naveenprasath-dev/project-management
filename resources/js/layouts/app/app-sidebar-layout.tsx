@@ -13,7 +13,7 @@ export default function AppSidebarLayout({
             <AppSidebar />
             <AppContent variant="sidebar" className="overflow-x-hidden flex flex-col">
                 <AppHeader breadcrumbs={breadcrumbs} />
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto page-enter">
                     {children}
                 </div>
             </AppContent>

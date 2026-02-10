@@ -25,24 +25,24 @@ const mentionStyles = {
         },
         input: {
             padding: '8px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid hsl(var(--border))',
             borderRadius: '0.375rem',
             outline: 'none',
         },
     },
     suggestions: {
         list: {
-            backgroundColor: 'white',
-            border: '1px solid rgba(0,0,0,0.15)',
+            backgroundColor: 'hsl(var(--popover))',
+            border: '1px solid hsl(var(--border))',
             fontSize: '14px',
             borderRadius: '4px',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
         },
         item: {
             padding: '5px 15px',
-            borderBottom: '1px solid rgba(0,0,0,0.15)',
+            borderBottom: '1px solid hsl(var(--border))',
             '&focused': {
-                backgroundColor: '#f1f5f9',
+                backgroundColor: 'hsl(var(--accent))',
             },
         },
     },

@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CommentController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -55,6 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('spaces/{space:slug}/tasks/{task}', [TaskController::class, 'update'])->name('spaces.tasks.update');
     Route::delete('spaces/{space:slug}/tasks/{task}', [TaskController::class, 'destroy'])->name('spaces.tasks.destroy');
     Route::get('spaces/{space:slug}/tasks/{task}/activities', [TaskController::class, 'activities'])->name('spaces.tasks.activities');
+    Route::get('spaces/{space:slug}/tasks/{task}/comments', [CommentController::class, 'index'])->name('spaces.tasks.comments.index');
+    Route::post('spaces/{space:slug}/tasks/{task}/comments', [CommentController::class, 'store'])->name('spaces.tasks.comments.store');
 
     // Chat Management
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index');

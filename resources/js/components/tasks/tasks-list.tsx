@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { List, Plus, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import TaskTableRow from '@/components/tasks/task-table-row';
@@ -100,7 +101,7 @@ export default function TasksList({ tasks, statuses, space, onEditTask, onCreate
                 {/* Status Groups */}
                 {statusGroups.map((group) => (
                     <div key={group.id} className="mb-2">
-                        <div className="flex items-center p-2 px-4 group/status cursor-pointer hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center p-2 px-4 group/status cursor-pointer hover:bg-muted/30 transition-colors border-l-3" style={{ borderLeftColor: group.color }}>
                             <ChevronDown className="w-4 h-4 mr-2 text-muted-foreground" />
                             <div
                                 className="text-[11px] font-bold px-2 py-0.5 rounded uppercase mr-3 text-white"
@@ -156,12 +157,13 @@ export default function TasksList({ tasks, statuses, space, onEditTask, onCreate
                 ))}
 
                 {tasks.length === 0 && (
-                    <div className="py-20 text-center border-2 border-dashed mx-6 mt-6 rounded-xl opacity-50">
-                        <List className="w-12 h-12 mx-auto mb-4 text-muted-foreground/20" />
-                        <h3 className="text-lg font-medium">No tasks in this list</h3>
-                        <Button onClick={() => onCreateTask()} variant="outline" className="mt-4">
-                            Create a task
-                        </Button>
+                    <div className="mx-6 mt-6">
+                        <EmptyState
+                            icon={List}
+                            title="No tasks in this list"
+                            description="Get started by creating your first task."
+                            action={{ label: 'Create a task', onClick: () => onCreateTask() }}
+                        />
                     </div>
                 )}
             </div>

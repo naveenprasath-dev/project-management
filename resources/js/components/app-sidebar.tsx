@@ -84,7 +84,7 @@ export function AppSidebar() {
                     <SidebarMenu>
                         {myWorkItems.map((item) => (
                             <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton asChild tooltip={item.title}>
+                                <SidebarMenuButton asChild tooltip={item.title} isActive={url === item.href || url.startsWith(item.href + '/')}>
                                     <Link href={item.href}>
                                         <item.icon className="w-5 h-5" />
                                         <span className="font-medium">{item.title}</span>
@@ -112,7 +112,7 @@ export function AppSidebar() {
                                     <SidebarMenuButton asChild tooltip={space.name}>
                                         <Link href={`/spaces/${space.slug}/tasks`}>
                                             <div
-                                                className="w-2.5 h-2.5 rounded-sm shrink-0 shadow-sm"
+                                                className="w-2.5 h-2.5 rounded-md shrink-0 shadow-sm ring-1 ring-black/5 transition-transform hover:scale-110"
                                                 style={{ backgroundColor: space.color || '#cbd5e1' }}
                                             />
                                             <span className="font-medium">{space.name}</span>

@@ -27,7 +27,7 @@ export default function Index({ spaces }: { spaces: Space[] }) {
             
             <div className="flex items-center justify-between p-4 px-6 border-b">
                 <div>
-                    <h1 className="text-2xl font-semibold">Spaces</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">Spaces</h1>
                     <p className="text-sm text-muted-foreground">Manage your organization's workspaces</p>
                 </div>
                 <Button asChild>
@@ -39,13 +39,13 @@ export default function Index({ spaces }: { spaces: Space[] }) {
 
             <div className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3">
                 {spaces.map((space) => (
-                    <div 
-                        key={space.id} 
-                        className="overflow-hidden border group rounded-xl bg-card hover:shadow-md transition-all"
+                    <div
+                        key={space.id}
+                        className="overflow-hidden border group rounded-xl bg-card hover:shadow-lg hover:border-primary/20 transition-all duration-300"
                     >
-                        <div 
-                            className="h-2 w-full" 
-                            style={{ backgroundColor: space.color || '#cbd5e1' }} 
+                        <div
+                            className="h-1.5 w-full"
+                            style={{ backgroundColor: space.color || '#cbd5e1' }}
                         />
                         <div className="p-5">
                             <div className="flex items-start justify-between mb-4">
@@ -60,7 +60,7 @@ export default function Index({ spaces }: { spaces: Space[] }) {
                             </div>
                             
                             <h3 className="mb-1 text-lg font-bold">
-                                <Link href={`/spaces/${space.slug}`} className="hover:text-primary leading-none">
+                                <Link href={`/spaces/${space.slug}`} className="hover:text-primary transition-colors leading-none">
                                     {space.name}
                                 </Link>
                             </h3>

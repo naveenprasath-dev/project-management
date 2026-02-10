@@ -85,8 +85,9 @@ export default function Show({ space }: { space: Space }) {
             <Head title={space.name} />
 
             <div className="flex flex-col h-full overflow-hidden">
-                <header className="flex items-center justify-between p-4 px-6 border-b bg-background/50 backdrop-blur">
-                    <div className="flex items-center gap-x-4">
+                <header className="flex items-center justify-between p-4 px-6 border-b bg-background/50 backdrop-blur relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundColor: space.color || '#cbd5e1' }} />
+                    <div className="flex items-center gap-x-4 relative">
                         <div
                             className="flex items-center justify-center w-10 h-10 rounded-lg"
                             style={{ backgroundColor: space.color || '#cbd5e1' }}
@@ -102,7 +103,7 @@ export default function Show({ space }: { space: Space }) {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-x-2">
+                    <div className="flex items-center gap-x-2 relative">
                         <Button size="sm" variant="outline" asChild>
                             <Link href={`/spaces/${space.slug}/settings`}>
                                 <Settings className="w-4 h-4 mr-2" /> Settings
@@ -174,7 +175,7 @@ export default function Show({ space }: { space: Space }) {
                                                 <div className="flex items-start justify-between mb-6">
                                                     <div className="flex items-center gap-4">
                                                         <div
-                                                            className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-lg shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-3"
+                                                            className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-lg shrink-0 transition-transform group-hover:scale-105"
                                                             style={{ backgroundColor: project.color }}
                                                         >
                                                             <FolderPlus className="w-6 h-6" />

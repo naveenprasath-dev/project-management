@@ -33,10 +33,17 @@ interface BoardViewProps {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-    low: 'bg-slate-50 text-slate-600 border-slate-100',
-    medium: 'bg-blue-50 text-blue-600 border-blue-100',
-    high: 'bg-orange-50 text-orange-600 border-orange-100',
-    urgent: 'bg-red-50 text-red-600 border-red-100',
+    low: 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800',
+    medium: 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800',
+    high: 'bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800',
+    urgent: 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
+};
+
+const PRIORITY_STRIPE_COLORS: Record<string, string> = {
+    low: 'bg-slate-300',
+    medium: 'bg-blue-400',
+    high: 'bg-orange-400',
+    urgent: 'bg-red-500',
 };
 
 export default function BoardView({ tasks, statuses, space, onEditTask, onCreateTask }: BoardViewProps) {
@@ -100,6 +107,8 @@ export default function BoardView({ tasks, statuses, space, onEditTask, onCreate
 
                         return (
                             <div key={status.id} className="flex flex-col w-[320px] shrink-0 h-full group/column">
+                                {/* Column Color Strip */}
+                                <div className="h-1 rounded-t-full mb-3" style={{ backgroundColor: status.color }} />
                                 {/* Column Header */}
                                 <div className="flex items-center justify-between mb-4 px-2">
                                     <div className="flex items-center gap-2">
@@ -110,7 +119,7 @@ export default function BoardView({ tasks, statuses, space, onEditTask, onCreate
                                         <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mr-2">
                                             {status.name}
                                         </h3>
-                                        <span className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-muted-foreground/70">
+                                        <span className="text-[10px] font-bold bg-muted px-2 py-0.5 rounded-full text-muted-foreground/70">
                                             {statusTasks.length}
                                         </span>
                                     </div>
@@ -129,7 +138,7 @@ export default function BoardView({ tasks, statuses, space, onEditTask, onCreate
                                             ref={provided.innerRef}
                                             className={cn(
                                                 "flex-1 overflow-y-auto space-y-3 pb-4 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent transition-colors p-1 rounded-xl",
-                                                snapshot.isDraggingOver ? "bg-primary/5 ring-2 ring-primary/20 ring-inset" : ""
+                                                snapshot.isDraggingOver ? "bg-primary/[0.04] ring-2 ring-primary/20 ring-dashed" : ""
                                             )}
                                         >
                                             {statusTasks.map((task, index) => (
@@ -142,12 +151,13 @@ export default function BoardView({ tasks, statuses, space, onEditTask, onCreate
                                                             onClick={() => onEditTask(task)}
                                                             className={cn(
                                                                 "bg-card p-4 rounded-xl border shadow-sm transition-all cursor-pointer group/card active:scale-[0.98]",
-                                                                snapshot.isDragging ? "shadow-2xl ring-2 ring-primary/50 rotate-[2deg] scale-[1.02]" : "hover:ring-2 hover:ring-primary/20"
+                                                                snapshot.isDragging ? "shadow-xl ring-2 ring-primary/40 rotate-1 scale-[1.03]" : "hover:ring-2 hover:ring-primary/20 hover:-translate-y-0.5"
                                                             )}
                                                             style={{
                                                                 ...provided.draggableProps.style,
                                                             }}
                                                         >
+                                                            <div className={cn("h-0.5 -mx-4 -mt-4 rounded-t-xl mb-3", PRIORITY_STRIPE_COLORS[task.priority || 'medium'])} />
                                                             <div className="flex items-start justify-between mb-2">
                                                                 <Badge variant="outline" className={cn(
                                                                     "capitalize text-[10px] px-2 py-0 font-bold border rounded-md",

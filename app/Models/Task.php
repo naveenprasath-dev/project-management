@@ -97,6 +97,14 @@ class Task extends Model
     }
 
     /**
+     * Task comments.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class)->with('user')->latest();
+    }
+
+    /**
      * The "booted" method of the model.
      */
     protected static function booted(): void

@@ -25,7 +25,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
     const getInitials = useInitials();
 
     return (
-        <header className="h-16 border-b bg-background flex items-center justify-between px-6 shrink-0 z-20">
+        <header className="h-16 border-b border-border/60 bg-background/80 backdrop-blur-sm sticky top-0 flex items-center justify-between px-6 shrink-0 z-20">
             {/* Left: Sidebar Trigger & Breadcrumbs */}
             <div className="flex items-center gap-4 min-w-0">
                 <div className="flex items-center gap-2">
@@ -45,7 +45,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                     <input
                         type="text"
                         placeholder="Search tasks, spaces, or documents..."
-                        className="w-full h-9 pl-10 pr-4 bg-muted/50 border-transparent rounded-lg text-sm transition-all focus:bg-background focus:border-primary focus:ring-0"
+                        className="w-full h-9 pl-10 pr-4 bg-muted/50 border-transparent rounded-lg text-sm transition-all focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/10 focus:shadow-sm"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border bg-background text-[10px] font-mono text-muted-foreground pointer-events-none uppercase">
                         ⌘K

@@ -64,14 +64,14 @@ export default function TaskFilterBar({
     const hasFilters = Object.values(currentFilters).some(v => !!v);
 
     return (
-        <div className="flex flex-col gap-4 p-4 border-b bg-background/50 backdrop-blur md:flex-row md:items-center">
+        <div className="flex flex-col gap-4 p-4 border-b bg-muted/20 md:flex-row md:items-center">
             <div className="relative flex-1 max-w-sm">
                 <Search className="absolute w-4 h-4 left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
                     placeholder="Search tasks..."
                     value={search}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 focus:ring-2 focus:ring-primary/10"
                 />
             </div>
 
