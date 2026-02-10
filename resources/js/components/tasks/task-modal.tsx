@@ -30,7 +30,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Loader2, PlusCircle, Save, X, User as UserIcon, ChevronDown, Clock, History, MessageSquare, ListTodo, Calendar } from 'lucide-react';
+import { Loader2, PlusCircle, Save, X, User as UserIcon, ChevronDown, Clock, History, MessageSquare, ListTodo, Calendar, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import axios from 'axios';
@@ -152,9 +152,20 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
         });
     };
 
+    const TASK_TYPES = [
+        { id: 'feature', name: 'Feature', icon: Star, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
+        { id: 'bug', name: 'Bug', icon: Bug, color: 'text-rose-500', bgColor: 'bg-rose-50' },
+        { id: 'improvement', name: 'Improvement', icon: TrendingUp, color: 'text-blue-500', bgColor: 'bg-blue-50' },
+        { id: 'task', name: 'Task', icon: CheckCircle2, color: 'text-slate-500', bgColor: 'bg-slate-50' },
+        { id: 'research', name: 'Research', icon: Search, color: 'text-purple-500', bgColor: 'bg-purple-50' },
+        { id: 'maintenance', name: 'Maintenance', icon: Settings, color: 'text-amber-500', bgColor: 'bg-amber-50' },
+        { id: 'security', name: 'Security', icon: ShieldCheck, color: 'text-red-700', bgColor: 'bg-red-50' },
+    ];
+
     const { data, setData, post, patch, processing, reset, errors } = useForm({
         title: '',
         description: '',
+        type: 'task',
         status_id: defaultStatus,
         priority: 'medium',
         due_date: '',
@@ -168,6 +179,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
             setData({
                 title: task.title,
                 description: task.description || '',
+                type: task.type || 'task',
                 status_id: task.status_id.toString(),
                 priority: task.priority,
                 due_date: task.due_date ? task.due_date.split('T')[0] : '',
@@ -282,9 +294,14 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                         <div className="space-y-1">
                             <DialogTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
                                 {task ? (
-                                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                        <Save className="w-5 h-5 text-primary" />
-                                    </div>
+                                    (() => {
+                                        const type = TASK_TYPES.find(t => t.id === data.type) || TASK_TYPES[3];
+                                        return (
+                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", type.bgColor)}>
+                                                <type.icon className={cn("w-5 h-5", type.color)} />
+                                            </div>
+                                        );
+                                    })()
                                 ) : (
                                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                         <PlusCircle className="w-5 h-5 text-primary" />
@@ -505,6 +522,28 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                     {/* Sidebar Area */}
                     <div className="w-80 bg-muted/10 overflow-y-auto p-6 space-y-8 custom-scrollbar border-l border-border/60">
                         <div className="space-y-6">
+                            <div className="grid gap-3">
+                                <Label htmlFor="type" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Task Type</Label>
+                                <Select
+                                    value={data.type}
+                                    onValueChange={(value) => setData('type', value)}
+                                >
+                                    <SelectTrigger id="type" className="w-full h-11 rounded-xl border-2 bg-background">
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl shadow-xl">
+                                        {TASK_TYPES.map((type) => (
+                                            <SelectItem key={type.id} value={type.id} className="rounded-lg">
+                                                <div className="flex items-center gap-2 font-medium">
+                                                    <type.icon className={cn("w-4 h-4", type.color)} />
+                                                    {type.name}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <div className="grid gap-3">
                                 <Label htmlFor="status_id" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
                                 <Select

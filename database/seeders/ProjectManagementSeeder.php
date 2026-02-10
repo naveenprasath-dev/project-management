@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Space;
+use App\Enums\TaskType;
 use App\Models\Project;
+use App\Models\Space;
 use App\Models\Task;
 use App\Models\TaskStatus;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -77,15 +78,15 @@ class ProjectManagementSeeder extends Seeder
 
             // Get statuses created by observer or manually if needed
             // Default TaskStatus has name/color/is_final/order/space_id
-            $todo = TaskStatus::where('space_id', $space->id)->where('name', 'To Do')->first() 
+            $todo = TaskStatus::where('space_id', $space->id)->where('name', 'To Do')->first()
                    ?? TaskStatus::create(['space_id' => $space->id, 'name' => 'To Do', 'color' => '#94a3b8', 'order' => 1]);
-            
+
             $inProgress = TaskStatus::where('space_id', $space->id)->where('name', 'In Progress')->first()
                          ?? TaskStatus::create(['space_id' => $space->id, 'name' => 'In Progress', 'color' => '#3b82f6', 'order' => 2]);
-            
+
             $review = TaskStatus::where('space_id', $space->id)->where('name', 'Review')->first()
                       ?? TaskStatus::create(['space_id' => $space->id, 'name' => 'Review', 'color' => '#f59e0b', 'order' => 3]);
-            
+
             $done = TaskStatus::where('space_id', $space->id)->where('name', 'Done')->first()
                     ?? TaskStatus::create(['space_id' => $space->id, 'name' => 'Done', 'color' => '#10b981', 'is_final' => true, 'order' => 4]);
 
@@ -93,11 +94,11 @@ class ProjectManagementSeeder extends Seeder
 
             // 3. Create 2 Projects per Space
             for ($p = 1; $p <= 2; $p++) {
-                $projectName = $sData['name'] . " - Project " . $p;
+                $projectName = $sData['name'].' - Project '.$p;
                 $project = Project::create([
                     'space_id' => $space->id,
                     'name' => $projectName,
-                    'description' => "Description for " . $projectName,
+                    'description' => 'Description for '.$projectName,
                     'color' => $sData['color'],
                     'created_by' => $admin->id,
                 ]);
@@ -113,13 +114,14 @@ class ProjectManagementSeeder extends Seeder
                 for ($t = 1; $t <= 5; $t++) {
                     $assignee = $allUsers[array_rand($allUsers)];
                     $status = $statuses[array_rand($statuses)];
-                    
+
                     $task = Task::create([
                         'space_id' => $space->id,
                         'project_id' => $project->id,
                         'status_id' => $status->id,
-                        'title' => "Task $t in " . $project->name,
+                        'title' => "Task $t in ".$project->name,
                         'description' => "Detailed requirements for task $t.",
+                        'type' => TaskType::cases()[array_rand(TaskType::cases())]->value,
                         'priority' => ['low', 'medium', 'high', 'urgent'][array_rand(['low', 'medium', 'high', 'urgent'])],
                         'due_date' => now()->addDays(rand(1, 14)),
                         'created_by' => $admin->id,

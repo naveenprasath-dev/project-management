@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TaskType;
 use App\Traits\BelongsToSpace;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSpace;
+    use BelongsToSpace, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'space_id',
@@ -22,6 +23,7 @@ class Task extends Model
         'parent_id',
         'title',
         'description',
+        'type',
         'priority',
         'due_date',
         'created_by',
@@ -29,10 +31,14 @@ class Task extends Model
         'order',
     ];
 
-    protected $casts = [
-        'due_date' => 'datetime',
-        'order' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'datetime',
+            'order' => 'integer',
+            'type' => TaskType::class,
+        ];
+    }
 
     /**
      * Task status.
@@ -123,12 +129,12 @@ class Task extends Model
     public function scopeAssignedToMe(Builder $query): Builder
     {
         return $query->where('assigned_to', auth()->id())
-            ->orWhereHas('assignees', fn($q) => $q->where('user_id', auth()->id()));
+            ->orWhereHas('assignees', fn ($q) => $q->where('user_id', auth()->id()));
     }
 
     public function scopeOverdue(Builder $query): Builder
     {
         return $query->where('due_date', '<', now())
-            ->whereHas('status', fn($q) => $q->where('is_final', false));
+            ->whereHas('status', fn ($q) => $q->where('is_final', false));
     }
 }

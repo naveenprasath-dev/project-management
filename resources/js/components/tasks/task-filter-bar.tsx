@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, Star, Bug, TrendingUp, CheckCircle2, Search as SearchIcon, Settings, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +18,7 @@ interface Filters {
     priority?: string;
     assigned_to?: string;
     project_id?: string;
+    type?: string;
 }
 
 export default function TaskFilterBar({
@@ -142,6 +143,53 @@ export default function TaskFilterBar({
                                 {member.name}
                             </SelectItem>
                         ))}
+                    </SelectContent>
+                </Select>
+
+                <Select
+                    value={currentFilters.type || 'all'}
+                    onValueChange={(v) => updateFilters({ type: v === 'all' ? undefined : v })}
+                >
+                    <SelectTrigger className="w-[140px] h-9">
+                        <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="feature">
+                            <div className="flex items-center gap-2">
+                                <Star className="w-3.5 h-3.5 text-emerald-500" /> Feature
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="bug">
+                            <div className="flex items-center gap-2">
+                                <Bug className="w-3.5 h-3.5 text-rose-500" /> Bug
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="improvement">
+                            <div className="flex items-center gap-2">
+                                <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Improvement
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="task">
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" /> Task
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="research">
+                            <div className="flex items-center gap-2">
+                                <SearchIcon className="w-3.5 h-3.5 text-purple-500" /> Research
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="maintenance">
+                            <div className="flex items-center gap-2">
+                                <Settings className="w-3.5 h-3.5 text-amber-500" /> Maintenance
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="security">
+                            <div className="flex items-center gap-2">
+                                <ShieldCheck className="w-3.5 h-3.5 text-red-700" /> Security
+                            </div>
+                        </SelectItem>
                     </SelectContent>
                 </Select>
 

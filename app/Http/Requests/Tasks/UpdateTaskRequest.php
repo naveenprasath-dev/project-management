@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Tasks;
 
+use App\Enums\TaskType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,6 +20,7 @@ class UpdateTaskRequest extends FormRequest
             'status_id' => ['sometimes', 'exists:task_statuses,id'],
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'type' => ['sometimes', Rule::enum(TaskType::class)],
             'priority' => ['sometimes', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'due_date' => ['nullable', 'date'],
             'assignee_ids' => ['sometimes', 'array'],

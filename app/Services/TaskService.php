@@ -37,9 +37,9 @@ class TaskService extends BaseService
     public function getGlobalTasksForUser(int $userId, array $filters = []): LengthAwarePaginator
     {
         $query = Task::where(function ($q) use ($userId) {
-                $q->where('assigned_to', $userId)
-                  ->orWhereHas('assignees', fn($sq) => $sq->where('user_id', $userId));
-            })
+            $q->where('assigned_to', $userId)
+                ->orWhereHas('assignees', fn ($sq) => $sq->where('user_id', $userId));
+        })
             ->with(['status', 'assignees', 'creator', 'space'])
             ->orderBy('due_date', 'asc')
             ->orderBy('priority', 'desc');
@@ -54,25 +54,25 @@ class TaskService extends BaseService
      */
     protected function applyFilters(Builder $query, array $filters): void
     {
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('title', 'like', "%{$filters['search']}%")
-                  ->orWhere('description', 'like', "%{$filters['search']}%");
+                    ->orWhere('description', 'like', "%{$filters['search']}%");
             });
         }
 
-        if (!empty($filters['status_id'])) {
+        if (! empty($filters['status_id'])) {
             $query->where('status_id', $filters['status_id']);
         }
 
-        if (!empty($filters['priority'])) {
+        if (! empty($filters['priority'])) {
             $query->where('priority', $filters['priority']);
         }
 
-        if (!empty($filters['assigned_to'])) {
+        if (! empty($filters['assigned_to'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('assigned_to', $filters['assigned_to'])
-                  ->orWhereHas('assignees', fn($sq) => $sq->where('user_id', $filters['assigned_to']));
+                    ->orWhereHas('assignees', fn ($sq) => $sq->where('user_id', $filters['assigned_to']));
             });
         }
 
@@ -80,8 +80,12 @@ class TaskService extends BaseService
             $query->overdue();
         }
 
-        if (!empty($filters['project_id'])) {
+        if (! empty($filters['project_id'])) {
             $query->where('project_id', $filters['project_id']);
+        }
+
+        if (! empty($filters['type'])) {
+            $query->where('type', $filters['type']);
         }
     }
 
@@ -100,7 +104,7 @@ class TaskService extends BaseService
             'assigned_to' => $assigneeIds[0] ?? null, // Sync first one to legacy column
         ]);
 
-        if (!empty($assigneeIds)) {
+        if (! empty($assigneeIds)) {
             $task->assignees()->sync($assigneeIds);
         }
 
@@ -122,7 +126,7 @@ class TaskService extends BaseService
     {
         /** @var Task $model */
         $oldStatus = $model->status->name ?? 'Unknown';
-        
+
         $assigneeIds = $data['assignee_ids'] ?? null;
         if (isset($data['assignee_ids'])) {
             unset($data['assignee_ids']);

@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { Calendar, User, MoreHorizontal, ChevronRight, MessageSquare, GripVertical } from 'lucide-react';
+import { Calendar, User, MoreHorizontal, ChevronRight, MessageSquare, GripVertical, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,16 @@ const PRIORITY_COLORS: Record<string, string> = {
     medium: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300',
     high: 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/50 dark:text-orange-300',
     urgent: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300',
+};
+
+const TASK_TYPE_ICONS: Record<string, any> = {
+    feature: { icon: Star, color: 'text-emerald-500' },
+    bug: { icon: Bug, color: 'text-rose-500' },
+    improvement: { icon: TrendingUp, color: 'text-blue-500' },
+    task: { icon: CheckCircle2, color: 'text-slate-500' },
+    research: { icon: Search, color: 'text-purple-500' },
+    maintenance: { icon: Settings, color: 'text-amber-500' },
+    security: { icon: ShieldCheck, color: 'text-red-700' },
 };
 
 export default function TaskTableRow({
@@ -74,6 +84,11 @@ export default function TaskTableRow({
                         </div>
                     )}
                     <div className="flex items-center gap-2 min-w-0">
+                        {(() => {
+                            const typeInfo = TASK_TYPE_ICONS[task.type] || TASK_TYPE_ICONS.task;
+                            const Icon = typeInfo.icon;
+                            return <Icon className={`w-3.5 h-3.5 ${typeInfo.color} shrink-0`} />;
+                        })()}
                         <span className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">
                             {task.title}
                         </span>

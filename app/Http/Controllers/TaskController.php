@@ -6,8 +6,8 @@ use App\Http\Requests\Tasks\StoreTaskRequest;
 use App\Http\Requests\Tasks\UpdateTaskRequest;
 use App\Models\Space;
 use App\Models\Task;
-use App\Services\TaskService;
 use App\Notifications\GeneralNotification;
+use App\Services\TaskService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,7 +23,7 @@ class TaskController extends Controller
      */
     public function index(Request $request, Space $space): Response
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 
@@ -36,8 +36,8 @@ class TaskController extends Controller
         return Inertia::render('tasks/index', [
             'space' => $space,
             'tasks' => $tasks,
-            'filters' => $request->only(['search', 'status_id', 'priority', 'assigned_to', 'project_id']),
-            'members' => $space->members()->get(['users.id', 'users.name'])
+            'filters' => $request->only(['search', 'status_id', 'priority', 'assigned_to', 'project_id', 'type']),
+            'members' => $space->members()->get(['users.id', 'users.name']),
         ]);
     }
 
@@ -46,7 +46,7 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request, Space $space)
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 
@@ -59,7 +59,7 @@ class TaskController extends Controller
         foreach ($task->assignees as $assignee) {
             if ($assignee->id !== $request->user()->id) {
                 $assignee->notify(new GeneralNotification(
-                    "New Task Assigned",
+                    'New Task Assigned',
                     "You have been assigned to: {$task->title}",
                     "/spaces/{$space->slug}/tasks",
                     'task_assigned',
@@ -76,7 +76,7 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Space $space, Task $task)
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 
@@ -86,7 +86,7 @@ class TaskController extends Controller
         // Notify if status changed
         if ($request->has('status_id') && $request->status_id != $oldStatusId) {
             $task->creator->notify(new GeneralNotification(
-                "Task Status Updated",
+                'Task Status Updated',
                 "Task '{$task->title}' is now '{$task->status->name}'",
                 "/spaces/{$space->slug}/tasks",
                 'status_changed',
@@ -102,7 +102,7 @@ class TaskController extends Controller
      */
     public function destroy(Request $request, Space $space, Task $task)
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 
@@ -116,7 +116,7 @@ class TaskController extends Controller
      */
     public function activities(Request $request, Space $space, Task $task)
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 

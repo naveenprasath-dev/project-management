@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MoreHorizontal, Plus, Calendar, User, MessageSquare } from 'lucide-react';
+import { MoreHorizontal, Plus, Calendar, User, MessageSquare, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -11,6 +11,7 @@ interface Task {
     id: number;
     title: string;
     description?: string;
+    type: string;
     priority?: string;
     due_date?: string;
     status_id: number;
@@ -44,6 +45,16 @@ const PRIORITY_STRIPE_COLORS: Record<string, string> = {
     medium: 'bg-blue-400',
     high: 'bg-orange-400',
     urgent: 'bg-red-500',
+};
+
+const TASK_TYPE_ICONS: Record<string, any> = {
+    feature: { icon: Star, color: 'text-emerald-500' },
+    bug: { icon: Bug, color: 'text-rose-500' },
+    improvement: { icon: TrendingUp, color: 'text-blue-500' },
+    task: { icon: CheckCircle2, color: 'text-slate-500' },
+    research: { icon: Search, color: 'text-purple-500' },
+    maintenance: { icon: Settings, color: 'text-amber-500' },
+    security: { icon: ShieldCheck, color: 'text-red-700' },
 };
 
 export default function BoardView({ tasks, statuses, space, onEditTask, onCreateTask }: BoardViewProps) {
@@ -159,12 +170,19 @@ export default function BoardView({ tasks, statuses, space, onEditTask, onCreate
                                                         >
                                                             <div className={cn("h-0.5 -mx-4 -mt-4 rounded-t-xl mb-3", PRIORITY_STRIPE_COLORS[task.priority || 'medium'])} />
                                                             <div className="flex items-start justify-between mb-2">
-                                                                <Badge variant="outline" className={cn(
-                                                                    "capitalize text-[10px] px-2 py-0 font-bold border rounded-md",
-                                                                    PRIORITY_COLORS[task.priority || 'medium']
-                                                                )}>
-                                                                    {task.priority || 'medium'}
-                                                                </Badge>
+                                                                <div className="flex items-center gap-2">
+                                                                    {(() => {
+                                                                        const typeInfo = TASK_TYPE_ICONS[task.type] || TASK_TYPE_ICONS.task;
+                                                                        const Icon = typeInfo.icon;
+                                                                        return <Icon className={cn("w-3.5 h-3.5", typeInfo.color)} />;
+                                                                    })()}
+                                                                    <Badge variant="outline" className={cn(
+                                                                        "capitalize text-[10px] px-2 py-0 font-bold border rounded-md",
+                                                                        PRIORITY_COLORS[task.priority || 'medium']
+                                                                    )}>
+                                                                        {task.priority || 'medium'}
+                                                                    </Badge>
+                                                                </div>
                                                                 {task.space && (
                                                                     <div className="flex items-center gap-1 text-right">
                                                                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: task.space.color }} />

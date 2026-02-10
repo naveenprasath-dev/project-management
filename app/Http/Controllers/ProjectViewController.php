@@ -19,7 +19,7 @@ class ProjectViewController extends Controller
         $this->authorize('view', $project);
 
         // Capture filters
-        $filters = $request->only(['search', 'status_id', 'priority', 'assigned_to']);
+        $filters = $request->only(['search', 'status_id', 'priority', 'assigned_to', 'type']);
 
         // Load project with relationships
         $project->load([
@@ -27,31 +27,35 @@ class ProjectViewController extends Controller
             'statuses',
             'tasks' => function ($query) use ($filters) {
                 // Apply filters
-                if (!empty($filters['search'])) {
+                if (! empty($filters['search'])) {
                     $query->where(function ($q) use ($filters) {
                         $q->where('title', 'like', "%{$filters['search']}%")
-                          ->orWhere('description', 'like', "%{$filters['search']}%");
+                            ->orWhere('description', 'like', "%{$filters['search']}%");
                     });
                 }
-                
-                if (!empty($filters['status_id']) && $filters['status_id'] !== 'all') {
+
+                if (! empty($filters['status_id']) && $filters['status_id'] !== 'all') {
                     $query->where('status_id', $filters['status_id']);
                 }
-                
-                if (!empty($filters['priority']) && $filters['priority'] !== 'all') {
+
+                if (! empty($filters['priority']) && $filters['priority'] !== 'all') {
                     $query->where('priority', $filters['priority']);
                 }
-                
-                if (!empty($filters['assigned_to']) && $filters['assigned_to'] !== 'all') {
-                     $query->where(function ($q) use ($filters) {
+
+                if (! empty($filters['assigned_to']) && $filters['assigned_to'] !== 'all') {
+                    $query->where(function ($q) use ($filters) {
                         $q->where('assigned_to', $filters['assigned_to'])
-                          ->orWhereHas('assignees', fn($sq) => $sq->where('user_id', $filters['assigned_to']));
+                            ->orWhereHas('assignees', fn ($sq) => $sq->where('user_id', $filters['assigned_to']));
                     });
+                }
+
+                if (! empty($filters['type']) && $filters['type'] !== 'all') {
+                    $query->where('type', $filters['type']);
                 }
 
                 // Ensure correct relationships on tasks
                 $query->with(['assignees', 'status'])->latest();
-            }
+            },
         ]);
 
         // Transform members to match frontend interface
