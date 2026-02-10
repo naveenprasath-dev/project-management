@@ -525,227 +525,6 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                         </div>
                                     </div>
 
-                                    {task && (
-                                        <div className="pt-8 border-t space-y-6">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <ListTodo className="w-5 h-5 text-primary" />
-                                                    <h3 className="text-sm font-bold uppercase tracking-wider">Sub-tasks</h3>
-                                                </div>
-                                                <Badge variant="outline" className="font-bold">{localSubTasks.length}</Badge>
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                {localSubTasks.map((subtask: any) => (
-                                                    <div
-                                                        key={subtask.id}
-                                                        onClick={() => onTaskSelect?.(subtask)}
-                                                        className="group flex items-center justify-between p-3 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer hover:border-primary/50"
-                                                    >
-                                                        <div className="flex items-center gap-4 min-w-0">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-4 h-4 rounded-md flex items-center justify-center bg-muted/20">
-                                                                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: subtask.status?.color }} />
-                                                                </div>
-                                                                <span className="text-sm font-medium truncate">{subtask.title}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                {(() => {
-                                                                    const typeInfo = TASK_TYPE_ICONS[subtask.type] || TASK_TYPE_ICONS.task;
-                                                                    const Icon = typeInfo.icon;
-                                                                    return <Icon className={cn("w-3 h-3", typeInfo.color)} />;
-                                                                })()}
-                                                                <Badge variant="outline" className={cn(
-                                                                    "capitalize text-[9px] px-1.5 py-0 font-bold border rounded-md h-4",
-                                                                    PRIORITY_COLORS[subtask.priority || 'medium']
-                                                                )}>
-                                                                    {subtask.priority || 'medium'}
-                                                                </Badge>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-3 shrink-0">
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    onTaskSelect?.(subtask);
-                                                                }}
-                                                                className="opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2 mr-2 hover:bg-primary/10 px-2 py-1 rounded-md"
-                                                            >
-                                                                <span className="text-[10px] font-bold text-primary uppercase">Edit</span>
-                                                                <Pencil className="w-3.5 h-3.5 text-primary" />
-                                                            </button>
-                                                            {(subtask.due_date || subtask.due_date_at) && (
-                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1 mr-2">
-                                                                    <Calendar className="w-2.5 h-2.5" />
-                                                                    {new Date(subtask.due_date || subtask.due_date_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                                </span>
-                                                            )}
-                                                            <div className="flex -space-x-1.5">
-                                                                {subtask.assignees?.map((a: any) => (
-                                                                    <div key={a.id} title={a.name} className="w-6 h-6 rounded-md bg-primary/10 border-2 border-background flex items-center justify-center text-[8px] font-black uppercase ring-1 ring-black/5">
-                                                                        {a.name.charAt(0)}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                <div className="bg-muted/10 p-3 rounded-xl border border-dashed hover:border-primary/50 transition-all space-y-3">
-                                                    <div className="flex gap-2">
-                                                        <Input
-                                                            value={subTaskTitle}
-                                                            onChange={(e) => setSubTaskTitle(e.target.value)}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.preventDefault();
-                                                                    handleAddSubTask(e as any);
-                                                                }
-                                                            }}
-                                                            placeholder="Add a new sub-task..."
-                                                            className="h-9 rounded-lg text-sm bg-background border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/30"
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            size="sm"
-                                                            onClick={(e) => handleAddSubTask(e as any)}
-                                                            disabled={isSubmittingSubTask || !subTaskTitle.trim()}
-                                                            className="h-9 px-4 rounded-lg shadow-md"
-                                                        >
-                                                            {isSubmittingSubTask ? (
-                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                            ) : (
-                                                                <PlusCircle className="w-4 h-4" />
-                                                            )}
-                                                        </Button>
-                                                    </div>
-                                                    <div className="flex flex-wrap items-center gap-6 px-1 py-1">
-                                                        <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
-                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Status</span>
-                                                            <Select value={subTaskStatusId} onValueChange={setSubTaskStatusId}>
-                                                                <SelectTrigger className="h-9 rounded-lg bg-background border-muted hover:border-primary/30 transition-all">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: (statuses || space?.statuses || []).find((s: any) => s.id.toString() === subTaskStatusId)?.color }} />
-                                                                        <SelectValue placeholder="Status" />
-                                                                    </div>
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {(statuses || space?.statuses || []).map((s: any) => (
-                                                                        <SelectItem key={s.id} value={s.id.toString()}>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                                                                                <span className="font-medium">{s.name}</span>
-                                                                            </div>
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
-                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Priority</span>
-                                                            <Select value={subTaskPriority} onValueChange={setSubTaskPriority}>
-                                                                <SelectTrigger className="h-9 rounded-lg bg-background border-muted hover:border-primary/30 transition-all">
-                                                                    <div className="flex items-center gap-2 text-sm font-medium">
-                                                                        <div className={cn("w-2 h-2 rounded-full",
-                                                                            subTaskPriority === 'low' ? "bg-slate-400" :
-                                                                                subTaskPriority === 'medium' ? "bg-blue-400" :
-                                                                                    subTaskPriority === 'high' ? "bg-orange-400" : "bg-red-500"
-                                                                        )} />
-                                                                        <SelectValue placeholder="Priority" />
-                                                                    </div>
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {['low', 'medium', 'high', 'urgent'].map((p) => (
-                                                                        <SelectItem key={p} value={p}>
-                                                                            <div className="flex items-center gap-2 text-sm">
-                                                                                <div className={cn("w-2 h-2 rounded-full",
-                                                                                    p === 'low' ? "bg-slate-400" :
-                                                                                        p === 'medium' ? "bg-blue-400" :
-                                                                                            p === 'high' ? "bg-orange-400" : "bg-red-500"
-                                                                                )} />
-                                                                                <span className="capitalize font-medium">{p}</span>
-                                                                            </div>
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1.5 min-w-[140px]">
-                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Due Date</span>
-                                                            <div className="relative">
-                                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-                                                                <input
-                                                                    type="date"
-                                                                    value={subTaskDueDate}
-                                                                    onChange={(e) => setSubTaskDueDate(e.target.value)}
-                                                                    className="h-9 w-full rounded-lg bg-background border border-muted pl-9 pr-3 text-sm font-medium hover:border-primary/30 focus:border-primary transition-all outline-none"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1.5 min-w-[150px]">
-                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Assignees</span>
-                                                            <div className="flex items-center gap-2">
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <button type="button" className="h-9 px-3 rounded-lg border border-dashed border-muted hover:border-primary/50 transition-all flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground hover:text-foreground">
-                                                                            <UserIcon className="w-3.5 h-3.5" />
-                                                                            <span>Select</span>
-                                                                        </button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end" className="w-56">
-                                                                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider">Project Members</DropdownMenuLabel>
-                                                                        <DropdownMenuSeparator />
-                                                                        <div className="max-h-56 overflow-y-auto">
-                                                                            {members.map((member) => (
-                                                                                <DropdownMenuCheckboxItem
-                                                                                    key={member.id}
-                                                                                    checked={subTaskAssigneeIds.includes(member.id.toString())}
-                                                                                    onCheckedChange={(checked) => {
-                                                                                        if (checked) {
-                                                                                            setSubTaskAssigneeIds(prev => [...prev, member.id.toString()]);
-                                                                                        } else {
-                                                                                            setSubTaskAssigneeIds(prev => prev.filter(id => id !== member.id.toString()));
-                                                                                        }
-                                                                                    }}
-                                                                                    onSelect={(e) => e.preventDefault()}
-                                                                                >
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[9px] font-black uppercase">
-                                                                                            {member.name.charAt(0)}
-                                                                                        </div>
-                                                                                        <span className="text-xs font-medium">{member.name}</span>
-                                                                                    </div>
-                                                                                </DropdownMenuCheckboxItem>
-                                                                            ))}
-                                                                        </div>
-                                                                    </DropdownMenuContent>
-                                                                </DropdownMenu>
-                                                                <div className="flex -space-x-2 overflow-hidden">
-                                                                    {subTaskAssigneeIds.slice(0, 3).map(id => {
-                                                                        const member = members.find(m => m.id.toString() === id);
-                                                                        return (
-                                                                            <div key={id} className="w-7 h-7 rounded bg-primary/10 border-2 border-background flex items-center justify-center text-[9px] font-black uppercase ring-1 ring-black/5" title={member?.name}>
-                                                                                {member?.name?.charAt(0)}
-                                                                            </div>
-                                                                        );
-                                                                    })}
-                                                                    {subTaskAssigneeIds.length > 3 && (
-                                                                        <div className="w-7 h-7 rounded bg-muted border-2 border-background flex items-center justify-center text-[9px] font-black ring-1 ring-black/5">
-                                                                            +{subTaskAssigneeIds.length - 3}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {task && (
                                         <div className="pt-8 border-t space-y-6">
@@ -1076,6 +855,215 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                 </div>
                                 {errors.due_date && <p className="text-xs text-destructive font-semibold">{errors.due_date}</p>}
                             </div>
+
+                            {/* Sub-tasks Section */}
+                            {task && (
+                                <div className="pt-6 border-t space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <ListTodo className="w-4 h-4 text-primary" />
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sub-tasks</h3>
+                                        </div>
+                                        <Badge variant="outline" className="font-bold text-[10px] h-5">{localSubTasks.length}</Badge>
+                                    </div>
+
+                                    <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                                        {localSubTasks.map((subtask: any) => (
+                                            <div
+                                                key={subtask.id}
+                                                onClick={() => onTaskSelect?.(subtask)}
+                                                className="group p-2.5 rounded-lg border bg-background hover:bg-muted/50 transition-all cursor-pointer hover:border-primary/50 space-y-2"
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                                                        <div className="w-3 h-3 rounded-sm flex items-center justify-center bg-muted/20 mt-0.5 shrink-0">
+                                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: subtask.status?.color }} />
+                                                        </div>
+                                                        <span className="text-xs font-medium leading-tight line-clamp-2">{subtask.title}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onTaskSelect?.(subtask);
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 p-1 rounded shrink-0"
+                                                    >
+                                                        <Pencil className="w-3 h-3 text-primary" />
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-wrap ml-5">
+                                                    {(() => {
+                                                        const typeInfo = TASK_TYPE_ICONS[subtask.type] || TASK_TYPE_ICONS.task;
+                                                        const Icon = typeInfo.icon;
+                                                        return <Icon className={cn("w-2.5 h-2.5", typeInfo.color)} />;
+                                                    })()}
+                                                    <Badge variant="outline" className={cn(
+                                                        "capitalize text-[8px] px-1 py-0 font-bold border rounded h-3.5",
+                                                        PRIORITY_COLORS[subtask.priority || 'medium']
+                                                    )}>
+                                                        {subtask.priority || 'medium'}
+                                                    </Badge>
+                                                    {(subtask.due_date || subtask.due_date_at) && (
+                                                        <span className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-0.5">
+                                                            <Calendar className="w-2 h-2" />
+                                                            {new Date(subtask.due_date || subtask.due_date_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                        </span>
+                                                    )}
+                                                    {subtask.assignees?.length > 0 && (
+                                                        <div className="flex -space-x-1">
+                                                            {subtask.assignees.slice(0, 2).map((a: any) => (
+                                                                <div key={a.id} title={a.name} className="w-4 h-4 rounded bg-primary/10 border border-background flex items-center justify-center text-[7px] font-black uppercase">
+                                                                    {a.name.charAt(0)}
+                                                                </div>
+                                                            ))}
+                                                            {subtask.assignees.length > 2 && (
+                                                                <div className="w-4 h-4 rounded bg-muted border border-background flex items-center justify-center text-[7px] font-black">
+                                                                    +{subtask.assignees.length - 2}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Add Sub-task Form */}
+                                        <div className="bg-muted/20 p-2.5 rounded-lg border border-dashed hover:border-primary/50 transition-all space-y-2.5">
+                                            <Input
+                                                value={subTaskTitle}
+                                                onChange={(e) => setSubTaskTitle(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleAddSubTask(e as any);
+                                                    }
+                                                }}
+                                                placeholder="Add a new sub-task..."
+                                                className="h-8 rounded-lg text-xs bg-background border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/30"
+                                            />
+
+                                            <div className="space-y-2">
+                                                <Select value={subTaskStatusId} onValueChange={setSubTaskStatusId}>
+                                                    <SelectTrigger className="h-8 rounded-lg bg-background border-muted text-xs">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (statuses || space?.statuses || []).find((s: any) => s.id.toString() === subTaskStatusId)?.color }} />
+                                                            <SelectValue placeholder="Status" />
+                                                        </div>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {(statuses || space?.statuses || []).map((s: any) => (
+                                                            <SelectItem key={s.id} value={s.id.toString()}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
+                                                                    <span className="text-xs font-medium">{s.name}</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+
+                                                <Select value={subTaskPriority} onValueChange={setSubTaskPriority}>
+                                                    <SelectTrigger className="h-8 rounded-lg bg-background border-muted text-xs">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className={cn("w-1.5 h-1.5 rounded-full",
+                                                                subTaskPriority === 'low' ? "bg-slate-400" :
+                                                                    subTaskPriority === 'medium' ? "bg-blue-400" :
+                                                                        subTaskPriority === 'high' ? "bg-orange-400" : "bg-red-500"
+                                                            )} />
+                                                            <SelectValue placeholder="Priority" />
+                                                        </div>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {['low', 'medium', 'high', 'urgent'].map((p) => (
+                                                            <SelectItem key={p} value={p}>
+                                                                <div className="flex items-center gap-2 text-xs">
+                                                                    <div className={cn("w-1.5 h-1.5 rounded-full",
+                                                                        p === 'low' ? "bg-slate-400" :
+                                                                            p === 'medium' ? "bg-blue-400" :
+                                                                                p === 'high' ? "bg-orange-400" : "bg-red-500"
+                                                                    )} />
+                                                                    <span className="capitalize font-medium">{p}</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+
+                                                <div className="relative">
+                                                    <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                                                    <input
+                                                        type="date"
+                                                        value={subTaskDueDate}
+                                                        onChange={(e) => setSubTaskDueDate(e.target.value)}
+                                                        className="h-8 w-full rounded-lg bg-background border border-muted pl-8 pr-2 text-xs font-medium hover:border-primary/30 focus:border-primary transition-all outline-none"
+                                                    />
+                                                </div>
+
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button type="button" className="h-8 w-full px-2.5 rounded-lg border border-dashed border-muted hover:border-primary/50 transition-all flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground hover:text-foreground">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <UserIcon className="w-3 h-3" />
+                                                                Assignees
+                                                            </span>
+                                                            {subTaskAssigneeIds.length > 0 && (
+                                                                <Badge variant="secondary" className="h-4 px-1 text-[8px]">
+                                                                    {subTaskAssigneeIds.length}
+                                                                </Badge>
+                                                            )}
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48">
+                                                        <DropdownMenuLabel className="text-[9px] font-bold uppercase tracking-wider">Members</DropdownMenuLabel>
+                                                        <DropdownMenuSeparator />
+                                                        <div className="max-h-48 overflow-y-auto">
+                                                            {members.map((member) => (
+                                                                <DropdownMenuCheckboxItem
+                                                                    key={member.id}
+                                                                    checked={subTaskAssigneeIds.includes(member.id.toString())}
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (checked) {
+                                                                            setSubTaskAssigneeIds(prev => [...prev, member.id.toString()]);
+                                                                        } else {
+                                                                            setSubTaskAssigneeIds(prev => prev.filter(id => id !== member.id.toString()));
+                                                                        }
+                                                                    }}
+                                                                    onSelect={(e) => e.preventDefault()}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[8px] font-black uppercase">
+                                                                            {member.name.charAt(0)}
+                                                                        </div>
+                                                                        <span className="text-xs font-medium">{member.name}</span>
+                                                                    </div>
+                                                                </DropdownMenuCheckboxItem>
+                                                            ))}
+                                                        </div>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                onClick={(e) => handleAddSubTask(e as any)}
+                                                disabled={isSubmittingSubTask || !subTaskTitle.trim()}
+                                                className="h-8 w-full rounded-lg shadow-sm text-xs"
+                                            >
+                                                {isSubmittingSubTask ? (
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <PlusCircle className="w-3.5 h-3.5 mr-1.5" />
+                                                        Add Sub-task
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
