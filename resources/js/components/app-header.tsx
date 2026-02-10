@@ -1,6 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Search, Plus, Bell, Settings, HelpCircle, Menu } from 'lucide-react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';

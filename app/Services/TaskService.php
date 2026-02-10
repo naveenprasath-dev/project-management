@@ -22,7 +22,8 @@ class TaskService extends BaseService
     public function getTasksForSpace(int $spaceId, array $filters = []): LengthAwarePaginator
     {
         $query = Task::where('space_id', $spaceId)
-            ->with(['status', 'assignees', 'creator', 'space', 'project'])
+            ->whereNull('parent_id')
+            ->with(['status', 'assignees', 'creator', 'space', 'project', 'children.status', 'children.assignees'])
             ->orderBy('order')
             ->orderBy('created_at', 'desc');
 

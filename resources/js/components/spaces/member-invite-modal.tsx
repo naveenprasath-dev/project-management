@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
+import { Loader2, UserPlus, Search, User, Check, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -18,8 +20,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Loader2, UserPlus, Search, User, Check, X } from 'lucide-react';
-import axios from 'axios';
 import { cn } from '@/lib/utils';
 
 interface MemberInviteModalProps {

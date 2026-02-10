@@ -1,7 +1,12 @@
+import { useForm, router } from '@inertiajs/react';
+import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
+import { Pencil, Loader2, PlusCircle, Save, X, User as UserIcon, ChevronDown, Clock, History, MessageSquare, ListTodo, Calendar, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
-import { useForm } from '@inertiajs/react';
 import { MentionsInput, Mention } from 'react-mentions';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -10,18 +15,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -30,10 +23,17 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Loader2, PlusCircle, Save, X, User as UserIcon, ChevronDown, Clock, History, MessageSquare, ListTodo, Calendar, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
-import axios from 'axios';
 
 interface TaskModalProps {
     space: any;
@@ -43,9 +43,27 @@ interface TaskModalProps {
     task?: any;
     project?: any; // Optional project to pre-fill
     statuses?: any[];
+    onTaskSelect?: (task: any) => void;
 }
 
-export default function TaskModal({ space, members, isOpen, onClose, task, project, statuses }: TaskModalProps) {
+const PRIORITY_COLORS: Record<string, string> = {
+    low: 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800',
+    medium: 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800',
+    high: 'bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800',
+    urgent: 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
+};
+
+const TASK_TYPE_ICONS: Record<string, any> = {
+    feature: { icon: Star, color: 'text-emerald-500' },
+    bug: { icon: Bug, color: 'text-rose-500' },
+    improvement: { icon: TrendingUp, color: 'text-blue-500' },
+    task: { icon: CheckCircle2, color: 'text-slate-500' },
+    research: { icon: Search, color: 'text-purple-500' },
+    maintenance: { icon: Settings, color: 'text-amber-500' },
+    security: { icon: ShieldCheck, color: 'text-red-700' },
+};
+
+export default function TaskModal({ space, members, isOpen, onClose, task, project, statuses, onTaskSelect }: TaskModalProps) {
     const defaultStatus = (statuses || space?.statuses)?.[0]?.id?.toString() || '';
     const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
     const [activities, setActivities] = useState<any[]>([]);
@@ -54,11 +72,26 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
     const [isLoadingComments, setIsLoadingComments] = useState(false);
     const [commentContent, setCommentContent] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+    const [subTaskTitle, setSubTaskTitle] = useState('');
+    const [subTaskPriority, setSubTaskPriority] = useState('medium');
+    const [subTaskDueDate, setSubTaskDueDate] = useState('');
+    const [subTaskStatusId, setSubTaskStatusId] = useState<string>('');
+    const [subTaskAssigneeIds, setSubTaskAssigneeIds] = useState<string[]>([]);
+    const [isSubmittingSubTask, setIsSubmittingSubTask] = useState(false);
+    const [localSubTasks, setLocalSubTasks] = useState<any[]>([]);
 
     const mentionData = useMemo(() =>
         members.map(m => ({ id: m.id.toString(), display: m.name })),
         [members]
     );
+
+    // Helper function to get the complete parent task object from project.tasks
+    const getCompleteParentTask = () => {
+        if (!task?.parent || !project?.tasks) return task?.parent;
+        // Find the complete parent task from project.tasks to ensure children are loaded
+        return project.tasks.find((t: any) => t.id === task.parent.id) || task.parent;
+    };
+
 
     const mentionStyles = {
         control: {
@@ -108,7 +141,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
         },
     };
 
-    const renderMentionSuggestion = (suggestion: { id: string; display: string }, _search: string, _highlightedDisplay: React.ReactNode, _index: number, focused: boolean) => (
+    const renderMentionSuggestion = (suggestion: any, _search: string, _highlightedDisplay: React.ReactNode, _index: number, focused: boolean) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 4px' }}>
             <div style={{
                 width: 28,
@@ -192,6 +225,23 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                 fetchActivities();
             }
             fetchComments();
+
+            // Load sub-tasks: If editing a sub-task, show siblings; otherwise show children
+            if (task.parent_id && project?.tasks) {
+                // For sub-tasks, find the parent and show its children (siblings of current task)
+                const parentTask = project.tasks.find((t: any) => t.id === task.parent_id);
+                setLocalSubTasks(parentTask?.children || []);
+            } else if (project?.tasks) {
+                // For main tasks, find the complete task object from project.tasks to ensure children are loaded
+                const completeTask = project.tasks.find((t: any) => t.id === task.id);
+                setLocalSubTasks(completeTask?.children || task.children || []);
+            } else {
+                // Fallback to task.children if project.tasks is not available
+                setLocalSubTasks(task.children || []);
+            }
+            setSubTaskStatusId((statuses || space?.statuses)?.[0]?.id?.toString() || '');
+            setSubTaskAssigneeIds([]);
+            setSubTaskTitle('');
         } else {
             // Re-initialize for creation
             reset();
@@ -207,7 +257,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                 setData('space_id', space.id);
             }
         }
-    }, [task, space.id, space.statuses, statuses, activeTab]);
+    }, [task, space.id, space.statuses, statuses, activeTab, project]);
 
     const fetchActivities = async () => {
         if (!task) return;
@@ -232,6 +282,45 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
             console.error('Failed to fetch comments', error);
         } finally {
             setIsLoadingComments(false);
+        }
+    };
+
+    const handleAddSubTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!subTaskTitle.trim() || isSubmittingSubTask || !task) return;
+
+        setIsSubmittingSubTask(true);
+        try {
+            const statusId = subTaskStatusId || (statuses || space.statuses || [])[0]?.id?.toString() || task.status_id;
+
+            const response = await axios.post(`/spaces/${space.slug}/tasks`, {
+                title: subTaskTitle,
+                parent_id: task.id,
+                space_id: space.id,
+                project_id: task.project_id,
+                status_id: statusId,
+                priority: subTaskPriority,
+                due_date: subTaskDueDate || null,
+                assignee_ids: subTaskAssigneeIds,
+                type: 'task',
+            });
+            setSubTaskTitle('');
+            setSubTaskDueDate('');
+            setSubTaskPriority('medium');
+            setSubTaskAssigneeIds([]);
+            setSubTaskStatusId((statuses || space.statuses || [])[0]?.id?.toString() || '');
+
+            // Add the new sub-task to the local state immediately
+            if (response.data) {
+                setLocalSubTasks(prev => [...prev, response.data]);
+            }
+
+            // In Inertia v2, reload preserves state/scroll by default
+            router.reload({ only: ['tasks'] });
+        } catch (error: any) {
+            console.error('Failed to add sub-task', error.response?.data || error.message);
+        } finally {
+            setIsSubmittingSubTask(false);
         }
     };
 
@@ -288,8 +377,11 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-5xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-background shadow-2xl">
-                <DialogHeader className="p-8 pb-6 border-b bg-gradient-to-b from-muted/30 to-transparent">
+            <DialogContent className="sm:max-w-7xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-background shadow-2xl">
+                <DialogHeader className={cn(
+                    "p-8 pb-6 border-b bg-gradient-to-b to-transparent",
+                    task?.parent ? "from-amber-50/50 dark:from-amber-950/20 border-amber-200/50 dark:border-amber-800/30" : "from-muted/30"
+                )}>
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <DialogTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
@@ -307,10 +399,49 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                         <PlusCircle className="w-5 h-5 text-primary" />
                                     </div>
                                 )}
-                                {task ? 'Task Details' : 'Create New Task'}
+                                {task ? (
+                                    <div className="flex items-center gap-2">
+                                        {task.parent && (
+                                            <button
+                                                onClick={() => onTaskSelect?.(getCompleteParentTask())}
+                                                className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20 mr-2"
+                                                title="Back to parent task"
+                                            >
+                                                <ArrowLeft className="w-4 h-4" />
+                                                <span className="text-xs font-black uppercase tracking-wider">Back</span>
+                                            </button>
+                                        )}
+                                        <span>{task.parent ? 'Sub-Task Details' : 'Task Details'}</span>
+                                        {task.parent && (
+                                            <Badge className="ml-2 bg-amber-500/10 text-amber-700 border-amber-500/20 font-black uppercase text-[10px] px-2 py-0.5">
+                                                Sub-Task
+                                            </Badge>
+                                        )}
+                                    </div>
+                                ) : 'Create New Task'}
                             </DialogTitle>
-                            <DialogDescription className="text-sm font-medium text-muted-foreground ml-13">
-                                {task ? `Objective #${task.id}` : 'Fill in the details for your new task objective.'}
+                            <DialogDescription className="text-sm font-medium text-muted-foreground ml-13 flex items-center gap-1">
+                                {task ? (
+                                    <>
+                                        {task.parent && (
+                                            <>
+                                                <span className="text-xs font-bold uppercase text-muted-foreground/70 mr-1">Sub-task of:</span>
+                                                <button
+                                                    onClick={() => onTaskSelect?.(getCompleteParentTask())}
+                                                    className="text-primary hover:underline font-bold transition-all bg-primary/5 px-2 py-0.5 rounded border border-primary/10 hover:bg-primary/10"
+                                                >
+                                                    {task.parent.title}
+                                                </button>
+                                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 mx-1" />
+                                            </>
+                                        )}
+                                        <span className="bg-primary/5 px-2 py-0.5 rounded text-primary border border-primary/10">
+                                            {task.parent ? 'Sub-task' : 'Objective'} #{task.id}
+                                        </span>
+                                    </>
+                                ) : (
+                                    'Fill in the details for your new task objective.'
+                                )}
                             </DialogDescription>
                         </div>
                     </div>
@@ -393,6 +524,228 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                             </MentionsInput>
                                         </div>
                                     </div>
+
+                                    {task && (
+                                        <div className="pt-8 border-t space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <ListTodo className="w-5 h-5 text-primary" />
+                                                    <h3 className="text-sm font-bold uppercase tracking-wider">Sub-tasks</h3>
+                                                </div>
+                                                <Badge variant="outline" className="font-bold">{localSubTasks.length}</Badge>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                {localSubTasks.map((subtask: any) => (
+                                                    <div
+                                                        key={subtask.id}
+                                                        onClick={() => onTaskSelect?.(subtask)}
+                                                        className="group flex items-center justify-between p-3 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer hover:border-primary/50"
+                                                    >
+                                                        <div className="flex items-center gap-4 min-w-0">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-4 h-4 rounded-md flex items-center justify-center bg-muted/20">
+                                                                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: subtask.status?.color }} />
+                                                                </div>
+                                                                <span className="text-sm font-medium truncate">{subtask.title}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                {(() => {
+                                                                    const typeInfo = TASK_TYPE_ICONS[subtask.type] || TASK_TYPE_ICONS.task;
+                                                                    const Icon = typeInfo.icon;
+                                                                    return <Icon className={cn("w-3 h-3", typeInfo.color)} />;
+                                                                })()}
+                                                                <Badge variant="outline" className={cn(
+                                                                    "capitalize text-[9px] px-1.5 py-0 font-bold border rounded-md h-4",
+                                                                    PRIORITY_COLORS[subtask.priority || 'medium']
+                                                                )}>
+                                                                    {subtask.priority || 'medium'}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onTaskSelect?.(subtask);
+                                                                }}
+                                                                className="opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2 mr-2 hover:bg-primary/10 px-2 py-1 rounded-md"
+                                                            >
+                                                                <span className="text-[10px] font-bold text-primary uppercase">Edit</span>
+                                                                <Pencil className="w-3.5 h-3.5 text-primary" />
+                                                            </button>
+                                                            {(subtask.due_date || subtask.due_date_at) && (
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1 mr-2">
+                                                                    <Calendar className="w-2.5 h-2.5" />
+                                                                    {new Date(subtask.due_date || subtask.due_date_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                                </span>
+                                                            )}
+                                                            <div className="flex -space-x-1.5">
+                                                                {subtask.assignees?.map((a: any) => (
+                                                                    <div key={a.id} title={a.name} className="w-6 h-6 rounded-md bg-primary/10 border-2 border-background flex items-center justify-center text-[8px] font-black uppercase ring-1 ring-black/5">
+                                                                        {a.name.charAt(0)}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                <div className="bg-muted/10 p-3 rounded-xl border border-dashed hover:border-primary/50 transition-all space-y-3">
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            value={subTaskTitle}
+                                                            onChange={(e) => setSubTaskTitle(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleAddSubTask(e as any);
+                                                                }
+                                                            }}
+                                                            placeholder="Add a new sub-task..."
+                                                            className="h-9 rounded-lg text-sm bg-background border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/30"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            onClick={(e) => handleAddSubTask(e as any)}
+                                                            disabled={isSubmittingSubTask || !subTaskTitle.trim()}
+                                                            className="h-9 px-4 rounded-lg shadow-md"
+                                                        >
+                                                            {isSubmittingSubTask ? (
+                                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                            ) : (
+                                                                <PlusCircle className="w-4 h-4" />
+                                                            )}
+                                                        </Button>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-6 px-1 py-1">
+                                                        <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
+                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Status</span>
+                                                            <Select value={subTaskStatusId} onValueChange={setSubTaskStatusId}>
+                                                                <SelectTrigger className="h-9 rounded-lg bg-background border-muted hover:border-primary/30 transition-all">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: (statuses || space?.statuses || []).find((s: any) => s.id.toString() === subTaskStatusId)?.color }} />
+                                                                        <SelectValue placeholder="Status" />
+                                                                    </div>
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {(statuses || space?.statuses || []).map((s: any) => (
+                                                                        <SelectItem key={s.id} value={s.id.toString()}>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                                                                                <span className="font-medium">{s.name}</span>
+                                                                            </div>
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
+                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Priority</span>
+                                                            <Select value={subTaskPriority} onValueChange={setSubTaskPriority}>
+                                                                <SelectTrigger className="h-9 rounded-lg bg-background border-muted hover:border-primary/30 transition-all">
+                                                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                                                        <div className={cn("w-2 h-2 rounded-full",
+                                                                            subTaskPriority === 'low' ? "bg-slate-400" :
+                                                                                subTaskPriority === 'medium' ? "bg-blue-400" :
+                                                                                    subTaskPriority === 'high' ? "bg-orange-400" : "bg-red-500"
+                                                                        )} />
+                                                                        <SelectValue placeholder="Priority" />
+                                                                    </div>
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {['low', 'medium', 'high', 'urgent'].map((p) => (
+                                                                        <SelectItem key={p} value={p}>
+                                                                            <div className="flex items-center gap-2 text-sm">
+                                                                                <div className={cn("w-2 h-2 rounded-full",
+                                                                                    p === 'low' ? "bg-slate-400" :
+                                                                                        p === 'medium' ? "bg-blue-400" :
+                                                                                            p === 'high' ? "bg-orange-400" : "bg-red-500"
+                                                                                )} />
+                                                                                <span className="capitalize font-medium">{p}</span>
+                                                                            </div>
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1.5 min-w-[140px]">
+                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Due Date</span>
+                                                            <div className="relative">
+                                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                                                                <input
+                                                                    type="date"
+                                                                    value={subTaskDueDate}
+                                                                    onChange={(e) => setSubTaskDueDate(e.target.value)}
+                                                                    className="h-9 w-full rounded-lg bg-background border border-muted pl-9 pr-3 text-sm font-medium hover:border-primary/30 focus:border-primary transition-all outline-none"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1.5 min-w-[150px]">
+                                                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider ml-1">Assignees</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <button type="button" className="h-9 px-3 rounded-lg border border-dashed border-muted hover:border-primary/50 transition-all flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground hover:text-foreground">
+                                                                            <UserIcon className="w-3.5 h-3.5" />
+                                                                            <span>Select</span>
+                                                                        </button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end" className="w-56">
+                                                                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider">Project Members</DropdownMenuLabel>
+                                                                        <DropdownMenuSeparator />
+                                                                        <div className="max-h-56 overflow-y-auto">
+                                                                            {members.map((member) => (
+                                                                                <DropdownMenuCheckboxItem
+                                                                                    key={member.id}
+                                                                                    checked={subTaskAssigneeIds.includes(member.id.toString())}
+                                                                                    onCheckedChange={(checked) => {
+                                                                                        if (checked) {
+                                                                                            setSubTaskAssigneeIds(prev => [...prev, member.id.toString()]);
+                                                                                        } else {
+                                                                                            setSubTaskAssigneeIds(prev => prev.filter(id => id !== member.id.toString()));
+                                                                                        }
+                                                                                    }}
+                                                                                    onSelect={(e) => e.preventDefault()}
+                                                                                >
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[9px] font-black uppercase">
+                                                                                            {member.name.charAt(0)}
+                                                                                        </div>
+                                                                                        <span className="text-xs font-medium">{member.name}</span>
+                                                                                    </div>
+                                                                                </DropdownMenuCheckboxItem>
+                                                                            ))}
+                                                                        </div>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                                <div className="flex -space-x-2 overflow-hidden">
+                                                                    {subTaskAssigneeIds.slice(0, 3).map(id => {
+                                                                        const member = members.find(m => m.id.toString() === id);
+                                                                        return (
+                                                                            <div key={id} className="w-7 h-7 rounded bg-primary/10 border-2 border-background flex items-center justify-center text-[9px] font-black uppercase ring-1 ring-black/5" title={member?.name}>
+                                                                                {member?.name?.charAt(0)}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                    {subTaskAssigneeIds.length > 3 && (
+                                                                        <div className="w-7 h-7 rounded bg-muted border-2 border-background flex items-center justify-center text-[9px] font-black ring-1 ring-black/5">
+                                                                            +{subTaskAssigneeIds.length - 3}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {task && (
                                         <div className="pt-8 border-t space-y-6">

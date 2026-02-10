@@ -1,11 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import type {
+    User} from 'lucide-react';
 import {
     ArrowLeft,
     Settings,
@@ -18,21 +13,27 @@ import {
     LayoutGrid,
     List,
     FolderPlus,
-    User,
     Check
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProjectMemberModal from '@/components/projects/project-member-modal';
-import TaskModal from '@/components/tasks/task-modal';
-import TasksList from '@/components/tasks/tasks-list';
 import BoardView from '@/components/tasks/board-view';
 import TaskFilterBar from '@/components/tasks/task-filter-bar';
+import TaskModal from '@/components/tasks/task-modal';
+import TasksList from '@/components/tasks/tasks-list';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
 
 interface User {
     id: number;
@@ -55,6 +56,7 @@ interface Task {
     assignees?: any[];
     due_date?: string;
     priority?: string;
+    type: string;
     [key: string]: any;
 }
 
@@ -93,9 +95,18 @@ export default function Show({ space, project, filters, can }: ShowProps) {
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
     const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
     const [memberViewEnabled, setMemberViewEnabled] = useState(false);
     const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (selectedTask) {
+            const updatedTask = project.tasks?.find((t: any) => t.id === selectedTask.id);
+            if (updatedTask) {
+                setSelectedTask(updatedTask);
+            }
+        }
+    }, [project.tasks]);
 
     // Determine effective statuses (project override vs space default)
     const globalStatuses = space.statuses ? space.statuses.filter((s: any) => !s.project_id) : [];
@@ -529,6 +540,7 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                 statuses={effectiveStatuses}
                 isOpen={isTaskModalOpen}
                 onClose={() => { setIsTaskModalOpen(false); setSelectedTask(null); }}
+                onTaskSelect={(task) => setSelectedTask(task)}
             />
         </AppLayout>
     );

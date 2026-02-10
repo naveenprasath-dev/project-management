@@ -18,6 +18,7 @@ class UpdateTaskRequest extends FormRequest
         return [
             'project_id' => ['sometimes', 'nullable', 'exists:projects,id'],
             'status_id' => ['sometimes', 'exists:task_statuses,id'],
+            'parent_id' => ['nullable', 'exists:tasks,id'],
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'type' => ['sometimes', Rule::enum(TaskType::class)],

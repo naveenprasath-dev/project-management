@@ -1,15 +1,4 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { useState } from 'react';
-import {
-    Calendar as CalendarIcon,
-    ChevronLeft,
-    ChevronRight,
-    Plus,
-    MoreHorizontal
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
     format,
     startOfMonth,
@@ -23,8 +12,19 @@ import {
     subMonths,
     isToday
 } from 'date-fns';
-import { cn } from '@/lib/utils';
+import {
+    Calendar as CalendarIcon,
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    MoreHorizontal
+} from 'lucide-react';
+import { useState } from 'react';
 import TaskModal from '@/components/tasks/task-modal';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
 
 interface PageProps {
     tasks: any[];

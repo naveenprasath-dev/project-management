@@ -26,6 +26,8 @@ class ProjectViewController extends Controller
             'members',
             'statuses',
             'tasks' => function ($query) use ($filters) {
+                $query->whereNull('parent_id');
+
                 // Apply filters
                 if (! empty($filters['search'])) {
                     $query->where(function ($q) use ($filters) {
@@ -54,7 +56,7 @@ class ProjectViewController extends Controller
                 }
 
                 // Ensure correct relationships on tasks
-                $query->with(['assignees', 'status'])->latest();
+                $query->with(['assignees', 'status', 'children.status', 'children.assignees', 'children.parent', 'parent'])->latest();
             },
         ]);
 

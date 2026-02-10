@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { Link, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
 import { Bell, Check, Trash2, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import axios from 'axios';
-import { formatDistanceToNow } from 'date-fns';
-import { Link, usePage } from '@inertiajs/react';
 
 interface NotificationData {
     id: string;

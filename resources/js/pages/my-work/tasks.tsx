@@ -1,16 +1,16 @@
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { useState, useEffect, useMemo } from 'react';
-import TaskTableRow from '@/components/tasks/task-table-row';
-import TaskModal from '@/components/tasks/task-modal';
-import BoardView from '@/components/tasks/board-view';
 import { LayoutGrid, List as ListIcon, CheckCircle2, Search, Filter, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import BoardView from '@/components/tasks/board-view';
+import TaskModal from '@/components/tasks/task-modal';
+import TaskTableRow from '@/components/tasks/task-table-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { BreadcrumbItem } from '@/types';
 
 interface PageProps {
     tasks: {

@@ -1,7 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import type { BreadcrumbItem, SharedData } from '@/types';
+import { formatDistanceToNow } from 'date-fns';
 import {
     LayoutGrid,
     CheckCircle2,
@@ -13,12 +11,14 @@ import {
     Search,
     List
 } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
-import { formatDistanceToNow } from 'date-fns';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import type { BreadcrumbItem, SharedData } from '@/types';
 
 function getGreeting(): string {
     const hour = new Date().getHours();

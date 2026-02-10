@@ -1,16 +1,17 @@
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Head, router, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { useState, useEffect } from 'react';
 import { Plus, LayoutGrid, ChevronDown, List, MessageCircle, X, CheckCircle2, ListTodo, FolderPlus, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import TaskFilterBar from '@/components/tasks/task-filter-bar';
-import TaskTableRow from '@/components/tasks/task-table-row';
-import TaskModal from '@/components/tasks/task-modal';
+import { useState, useEffect } from 'react';
 import ChatWindow from '@/components/chat/chat-window';
 import BoardView from '@/components/tasks/board-view';
+import TaskFilterBar from '@/components/tasks/task-filter-bar';
+import TaskModal from '@/components/tasks/task-modal';
+import TaskTableRow from '@/components/tasks/task-table-row';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import { playMovementSound } from '@/lib/play-movement-sound';
 import { cn } from '@/lib/utils';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { BreadcrumbItem } from '@/types';
 
 interface PageProps {
     space: any;
@@ -39,6 +40,15 @@ export default function Index({ space, tasks, filters, members }: PageProps) {
     useEffect(() => {
         setLocalTasks(tasks.data);
     }, [tasks.data]);
+
+    useEffect(() => {
+        if (selectedTask) {
+            const updatedTask = localTasks.find(t => t.id === selectedTask.id);
+            if (updatedTask) {
+                setSelectedTask(updatedTask);
+            }
+        }
+    }, [localTasks]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Spaces', href: '/spaces' },
@@ -79,6 +89,7 @@ export default function Index({ space, tasks, filters, members }: PageProps) {
             t.id === taskId ? { ...t, status_id: newStatusId } : t
         );
         setLocalTasks(updatedTasks);
+        playMovementSound();
 
         // API call
         router.patch(`/spaces/${space.slug}/tasks/${taskId}`, {
@@ -396,6 +407,7 @@ export default function Index({ space, tasks, filters, members }: PageProps) {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 task={selectedTask}
+                onTaskSelect={(task) => setSelectedTask(task)}
             />
         </AppLayout>
     );

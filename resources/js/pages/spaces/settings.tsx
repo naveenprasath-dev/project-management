@@ -1,21 +1,21 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import { ArrowLeft, Settings as SettingsIcon, ListTodo, Users as UsersIcon, UserPlus, Trash2, FolderPlus, MoreHorizontal, Pencil } from 'lucide-react';
 import { useState } from 'react';
-import MemberInviteModal from '@/components/spaces/member-invite-modal';
 import ProjectModal from '@/components/projects/project-modal';
+import MemberInviteModal from '@/components/spaces/member-invite-modal';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
 
 interface Space {
     id: number;

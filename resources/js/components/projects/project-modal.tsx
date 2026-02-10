@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
+import { Loader2, FolderPlus, Save } from 'lucide-react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, FolderPlus, Save } from 'lucide-react';
 
 interface ProjectModalProps {
     space: any;

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { MoreHorizontal, Plus, Calendar, User, MessageSquare, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { router } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { MoreHorizontal, Plus, Calendar, User, MessageSquare, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { playMovementSound } from '@/lib/play-movement-sound';
+import { cn } from '@/lib/utils';
 
 interface Task {
     id: number;
@@ -17,6 +18,7 @@ interface Task {
     status_id: number;
     assignees?: any[];
     space?: any;
+    parent?: any;
 }
 
 interface Status {
@@ -87,6 +89,7 @@ export default function BoardView({ tasks, statuses, space, onEditTask, onCreate
             t.id === taskId ? { ...t, status_id: newStatusId } : t
         );
         setLocalTasks(updatedTasks);
+        playMovementSound();
 
         // API call to update status
         router.patch(`/spaces/${task.space?.slug || space?.slug}/tasks/${taskId}`, {

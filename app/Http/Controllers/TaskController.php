@@ -68,6 +68,10 @@ class TaskController extends Controller
             }
         }
 
+        if ($request->wantsJson()) {
+            return response()->json($task->load(['status', 'assignees', 'parent']));
+        }
+
         return back()->with('success', 'Task created successfully.');
     }
 

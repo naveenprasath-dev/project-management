@@ -1,9 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
 import { Settings, Plus, LayoutGrid, Users, FolderPlus, CheckCircle2, ListTodo } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
 
 interface Task {
     id: number;

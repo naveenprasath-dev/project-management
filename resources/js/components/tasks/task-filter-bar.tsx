@@ -1,7 +1,9 @@
 import { router } from '@inertiajs/react';
+import { debounce } from 'lodash';
 import { Search, Filter, X, Star, Bug, TrendingUp, CheckCircle2, Search as SearchIcon, Settings, ShieldCheck } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -9,8 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useEffect, useState, useCallback } from 'react';
-import { debounce } from 'lodash';
 
 interface Filters {
     search?: string;

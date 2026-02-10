@@ -1,8 +1,8 @@
 import { Link, router } from '@inertiajs/react';
-import { Calendar, User, MoreHorizontal, ChevronRight, MessageSquare, GripVertical, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import { Calendar, User, MoreHorizontal, ChevronRight, MessageSquare, GripVertical, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,

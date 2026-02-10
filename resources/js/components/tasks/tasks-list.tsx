@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { router } from '@inertiajs/react';
 import { List, Plus, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import TaskTableRow from '@/components/tasks/task-table-row';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { playMovementSound } from '@/lib/play-movement-sound';
 import { cn } from '@/lib/utils';
-import { router } from '@inertiajs/react';
-import TaskTableRow from '@/components/tasks/task-table-row';
 
 interface Task {
     id: number;
@@ -15,6 +16,7 @@ interface Task {
     due_date?: string;
     status_id: number;
     assignees?: any[];
+    parent?: any;
     [key: string]: any;
 }
 
@@ -66,6 +68,7 @@ export default function TasksList({ tasks, statuses, space, onEditTask, onCreate
             t.id === taskId ? { ...t, status_id: newStatusId } : t
         );
         setLocalTasks(updatedTasks);
+        playMovementSound();
 
         // API call
         router.patch(`/spaces/${space.slug}/tasks/${taskId}`, {

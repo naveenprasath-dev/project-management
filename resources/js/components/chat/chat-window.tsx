@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePage } from '@inertiajs/react';
-import { MentionsInput, Mention } from 'react-mentions';
 import axios from 'axios';
-import { Send, Hash, User, MessageCircle, MoreHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { debounce } from 'lodash';
+import { Send, Hash, User, MessageCircle, MoreHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MentionsInput, Mention } from 'react-mentions';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 // Custom styles for react-mentions (minimal tailwind-friendly)

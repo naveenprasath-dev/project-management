@@ -16,6 +16,11 @@ import {
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
@@ -31,11 +36,6 @@ import {
     SidebarGroupLabel,
     SidebarGroupAction,
 } from '@/components/ui/sidebar';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { dashboard } from '@/routes';
 import AppLogo from './app-logo';
 
