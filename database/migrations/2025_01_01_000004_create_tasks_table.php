@@ -11,7 +11,6 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('space_id')->constrained()->onDelete('cascade');
             $table->foreignId('status_id')->constrained('task_statuses')->onDelete('cascade');
-            $table->foreignId('parent_id')->nullable()->constrained('tasks')->onDelete('cascade');
             $table->string('title');
             $table->longText('description')->nullable();
             $table->string('priority')->default('medium'); // low, medium, high, urgent

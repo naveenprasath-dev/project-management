@@ -26,7 +26,6 @@ class TaskStatusFactory extends Factory
             'name' => $this->faker->word,
             'color' => $this->faker->hexColor,
             'order' => $this->faker->numberBetween(1, 100),
-            'is_default' => false,
             'is_final' => false,
             'space_id' => Space::factory(),
             'project_id' => null,

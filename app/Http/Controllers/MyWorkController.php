@@ -19,7 +19,7 @@ class MyWorkController extends Controller
     public function tasks(Request $request): Response
     {
         $tasks = $this->taskService->getGlobalTasksForUser(
-            $request->user()->id, 
+            $request->user()->id,
             $request->all()
         );
 
@@ -45,8 +45,16 @@ class MyWorkController extends Controller
             array_merge($request->all(), ['per_page' => 1000]) // Get more for calendar
         );
 
+        // Fetch user's spaces with necessary details for TaskModal
+        $spaces = $request->user()->spaces()
+            ->with(['members', 'statuses', 'projects' => function ($q) {
+                $q->where('is_archived', false);
+            }])
+            ->get();
+
         return Inertia::render('my-work/calendar', [
             'tasks' => $tasks->items(),
+            'spaces' => $spaces,
         ]);
     }
 }

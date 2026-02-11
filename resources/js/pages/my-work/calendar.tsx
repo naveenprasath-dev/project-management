@@ -28,9 +28,10 @@ import type { BreadcrumbItem } from '@/types';
 
 interface PageProps {
     tasks: any[];
+    spaces: any[];
 }
 
-export default function CalendarPage({ tasks }: PageProps) {
+export default function CalendarPage({ tasks, spaces }: PageProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,11 +64,17 @@ export default function CalendarPage({ tasks }: PageProps) {
         setIsModalOpen(true);
     };
 
+    const handleAddTask = (day: Date) => {
+        const formattedDate = format(day, 'yyyy-MM-dd');
+        setSelectedTask({ due_date: formattedDate });
+        setIsModalOpen(true);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Calendar" />
 
-            <div className="flex flex-col h-full bg-background overflow-hidden">
+            <div className="flex flex-col h-full bg-background overflow-hidden text-slate-900 dark:text-slate-100">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 px-6 border-b bg-background z-10">
                     <div className="flex items-center gap-4">
@@ -102,7 +109,12 @@ export default function CalendarPage({ tasks }: PageProps) {
                                 <div className="w-2 h-2 rounded-full bg-blue-500" /> Med
                             </span>
                         </div>
-                        <Button size="sm" variant="default" className="shadow-sm">
+                        <Button
+                            size="sm"
+                            variant="default"
+                            className="shadow-sm"
+                            onClick={() => handleAddTask(new Date())}
+                        >
                             <Plus className="w-4 h-4 mr-2" /> New Task
                         </Button>
                     </div>
@@ -128,10 +140,11 @@ export default function CalendarPage({ tasks }: PageProps) {
                                 <div
                                     key={day.toString()}
                                     className={cn(
-                                        "min-h-[120px] p-2 border-r border-b group hover:bg-muted/10 transition-colors relative flex flex-col",
-                                        !isCurrentMonth && "bg-muted/20",
+                                        "min-h-[120px] p-2 border-r border-b group hover:bg-muted/10 transition-colors relative flex flex-col cursor-pointer",
+                                        !isCurrentMonth && "bg-muted/5",
                                         idx % 7 === 6 && "border-r-0"
                                     )}
+                                    onClick={() => handleAddTask(day)}
                                 >
                                     <div className="flex items-center justify-between mb-1">
                                         <span className={cn(
@@ -147,17 +160,20 @@ export default function CalendarPage({ tasks }: PageProps) {
                                         )}
                                     </div>
 
-                                    <div className="flex-1 space-y-1 overflow-hidden">
+                                    <div className="flex-1 space-y-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                                         {dayTasks.map(task => (
                                             <button
                                                 key={task.id}
-                                                onClick={() => handleTaskClick(task)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleTaskClick(task);
+                                                }}
                                                 className={cn(
                                                     "w-full text-left px-1.5 py-1 rounded text-[10px] font-medium truncate border shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform active:scale-[0.98]",
-                                                    task.priority === 'urgent' ? "bg-red-50 border-red-100 text-red-700" :
-                                                        task.priority === 'high' ? "bg-orange-50 border-orange-100 text-orange-700" :
-                                                            task.priority === 'medium' ? "bg-blue-50 border-blue-100 text-blue-700" :
-                                                                "bg-background text-foreground"
+                                                    task.priority === 'urgent' ? "bg-red-50 border-red-100 text-red-700 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400" :
+                                                        task.priority === 'high' ? "bg-orange-50 border-orange-100 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900/30 dark:text-orange-400" :
+                                                            task.priority === 'medium' ? "bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900/30 dark:text-blue-400" :
+                                                                "bg-background text-foreground dark:bg-slate-900 dark:border-slate-800"
                                                 )}
                                             >
                                                 <div className="flex items-center gap-1">
@@ -171,7 +187,13 @@ export default function CalendarPage({ tasks }: PageProps) {
                                         ))}
                                     </div>
 
-                                    <button className="absolute bottom-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddTask(day);
+                                        }}
+                                        className="absolute bottom-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary bg-background dark:bg-slate-900 rounded border shadow-sm"
+                                    >
                                         <Plus className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
@@ -181,13 +203,14 @@ export default function CalendarPage({ tasks }: PageProps) {
                 </div>
             </div>
 
-            {selectedTask && (
+            {isModalOpen && (
                 <TaskModal
-                    space={selectedTask.space}
-                    members={selectedTask.space?.members || []}
+                    space={selectedTask?.space || spaces[0]}
+                    members={selectedTask?.space?.members || spaces[0]?.members || []}
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     task={selectedTask}
+                    statuses={selectedTask?.space?.statuses || spaces[0]?.statuses || []}
                 />
             )}
         </AppLayout>

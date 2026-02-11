@@ -208,7 +208,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
     });
 
     useEffect(() => {
-        if (task) {
+        if (task && task.id) {
             setData({
                 title: task.title,
                 description: task.description || '',
@@ -242,6 +242,16 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
             setSubTaskStatusId((statuses || space?.statuses)?.[0]?.id?.toString() || '');
             setSubTaskAssigneeIds([]);
             setSubTaskTitle('');
+        } else if (task) {
+            // Pre-filled creation (e.g. from calendar)
+            reset();
+            setData(prev => ({
+                ...prev,
+                ...task,
+                space_id: space.id,
+                status_id: (statuses || space?.statuses)?.[0]?.id?.toString() || '',
+            }));
+            setActiveTab('details');
         } else {
             // Re-initialize for creation
             reset();
@@ -343,11 +353,11 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        const url = task
+        const url = task?.id
             ? `/spaces/${space.slug}/tasks/${task.id}`
             : `/spaces/${space.slug}/tasks`;
 
-        const method = task ? patch : post;
+        const method = task?.id ? patch : post;
 
         method(url, {
             onSuccess: () => {
@@ -379,24 +389,24 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-7xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-background shadow-2xl">
                 <DialogHeader className={cn(
-                    "p-8 pb-6 border-b bg-gradient-to-b to-transparent",
+                    "p-5 pb-3 border-b bg-gradient-to-b to-transparent",
                     task?.parent ? "from-amber-50/50 dark:from-amber-950/20 border-amber-200/50 dark:border-amber-800/30" : "from-muted/30"
                 )}>
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <DialogTitle className="flex items-center gap-3 text-2xl font-bold tracking-tight">
+                            <DialogTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
                                 {task ? (
                                     (() => {
                                         const type = TASK_TYPES.find(t => t.id === data.type) || TASK_TYPES[3];
                                         return (
-                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", type.bgColor)}>
-                                                <type.icon className={cn("w-5 h-5", type.color)} />
+                                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", type.bgColor)}>
+                                                <type.icon className={cn("w-4 h-4", type.color)} />
                                             </div>
                                         );
                                     })()
                                 ) : (
-                                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                        <PlusCircle className="w-5 h-5 text-primary" />
+                                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <PlusCircle className="w-4 h-4 text-primary" />
                                     </div>
                                 )}
                                 {task ? (
@@ -452,7 +462,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                         <button
                             onClick={() => setActiveTab('details')}
                             className={cn(
-                                "py-4 px-6 text-sm font-semibold transition-all relative",
+                                "py-2.5 px-5 text-sm font-semibold transition-all relative",
                                 activeTab === 'details' ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
@@ -465,7 +475,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                         <button
                             onClick={() => setActiveTab('activity')}
                             className={cn(
-                                "py-4 px-6 text-sm font-semibold transition-all relative",
+                                "py-2.5 px-5 text-sm font-semibold transition-all relative",
                                 activeTab === 'activity' ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
@@ -480,18 +490,18 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
                 <div className="flex-1 overflow-hidden flex">
                     {/* Main Content Area */}
-                    <div className="flex-1 overflow-y-auto p-8 border-r custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-6 border-r custom-scrollbar">
                         {activeTab === 'details' || !task ? (
                             <form id="task-form" onSubmit={submit} className="space-y-8">
                                 <div className="space-y-6">
                                     <div className="grid gap-3">
-                                        <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Title</Label>
+                                        <Label htmlFor="title" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Title</Label>
                                         <Input
                                             id="title"
                                             value={data.title}
                                             onChange={(e) => setData('title', e.target.value)}
                                             placeholder="Enter task title..."
-                                            className={cn("h-12 text-lg font-semibold rounded-xl border-2 transition-all", errors.title ? 'border-destructive' : 'focus:border-primary')}
+                                            className={cn("h-10 text-base font-semibold rounded-lg border-2 transition-all", errors.title ? 'border-destructive' : 'focus:border-primary')}
                                             autoFocus
                                         />
                                         {errors.title && <p className="text-xs text-destructive font-semibold">{errors.title}</p>}
@@ -652,7 +662,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                     </div>
 
                     {/* Sidebar Area */}
-                    <div className="w-80 bg-muted/10 overflow-y-auto p-6 space-y-8 custom-scrollbar border-l border-border/60">
+                    <div className="w-80 bg-muted/10 overflow-y-auto p-5 space-y-6 custom-scrollbar border-l border-border/60">
                         <div className="space-y-6">
                             <div className="grid gap-3">
                                 <Label htmlFor="type" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Task Type</Label>
