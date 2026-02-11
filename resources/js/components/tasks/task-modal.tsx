@@ -43,6 +43,7 @@ interface TaskModalProps {
     task?: any;
     project?: any; // Optional project to pre-fill
     statuses?: any[];
+    sprints?: any[];
     onTaskSelect?: (task: any) => void;
 }
 
@@ -63,7 +64,7 @@ const TASK_TYPE_ICONS: Record<string, any> = {
     security: { icon: ShieldCheck, color: 'text-red-700' },
 };
 
-export default function TaskModal({ space, members, isOpen, onClose, task, project, statuses, onTaskSelect }: TaskModalProps) {
+export default function TaskModal({ space, members, isOpen, onClose, task, project, statuses, sprints, onTaskSelect }: TaskModalProps) {
     const defaultStatus = (statuses || space?.statuses)?.[0]?.id?.toString() || '';
     const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
     const [activities, setActivities] = useState<any[]>([]);
@@ -204,6 +205,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
         due_date: '',
         project_id: '',
         assignee_ids: [] as string[],
+        sprint_id: '' as string | number,
         space_id: space.id,
     });
 
@@ -218,6 +220,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                 due_date: task.due_date ? task.due_date.split('T')[0] : '',
                 project_id: task.project_id?.toString() || '',
                 assignee_ids: task.assignees?.map((u: any) => u.id.toString()) || [],
+                sprint_id: task.sprint_id?.toString() || '',
                 space_id: space.id,
             });
 
@@ -250,6 +253,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                 ...task,
                 space_id: space.id,
                 status_id: (statuses || space?.statuses)?.[0]?.id?.toString() || '',
+                sprint_id: task.sprint_id?.toString() || '',
             }));
             setActiveTab('details');
         } else {
@@ -766,7 +770,8 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                         setData(prev => ({
                                             ...prev,
                                             project_id: projectId,
-                                            status_id: availableStatuses?.[0]?.id.toString() || prev.status_id
+                                            status_id: availableStatuses?.[0]?.id.toString() || prev.status_id,
+                                            sprint_id: '' // Clear sprint when project changes
                                         }));
                                     }}
                                 >
@@ -788,6 +793,38 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            {/* Sprint Selection */}
+                            {(sprints && sprints.length > 0) && (
+                                <div className="grid gap-3">
+                                    <Label htmlFor="sprint_id" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sprint</Label>
+                                    <Select
+                                        value={data.sprint_id?.toString() || 'none'}
+                                        onValueChange={(value) => setData('sprint_id', value === 'none' ? '' : value)}
+                                    >
+                                        <SelectTrigger id="sprint_id" className="w-full h-11 rounded-xl border-2 bg-background">
+                                            <SelectValue placeholder="Select sprint" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl shadow-xl">
+                                            <SelectItem value="none">
+                                                <span className="text-muted-foreground italic">No Sprint (Backlog)</span>
+                                            </SelectItem>
+                                            {sprints.filter(s => s.status !== 'completed').map((sprint: any) => (
+                                                <SelectItem key={sprint.id} value={sprint.id.toString()} className="rounded-lg">
+                                                    <div className="flex items-center gap-2 font-medium">
+                                                        <div className={cn(
+                                                            "w-2 h-2 rounded-full",
+                                                            sprint.status === 'active' ? "bg-primary" : "bg-muted-foreground"
+                                                        )} />
+                                                        {sprint.name}
+                                                        {sprint.status === 'active' && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full ml-auto">Active</span>}
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
 
                             <div className="grid gap-3">
                                 <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Assignees</Label>

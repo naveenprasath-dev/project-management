@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Project extends Model
 {
-    use HasFactory, BelongsToSpace;
+    use BelongsToSpace, HasFactory;
 
     protected $fillable = [
         'space_id',
@@ -60,7 +60,7 @@ class Project extends Model
         $counter = 1;
 
         while (static::where('space_id', $spaceId)->where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
         }
 
@@ -86,6 +86,14 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Get all sprints for this project.
+     */
+    public function sprints(): HasMany
+    {
+        return $this->hasMany(Sprint::class);
     }
 
     /**
@@ -135,7 +143,7 @@ class Project extends Model
      */
     public function addMember(User $user, string $role = 'member'): void
     {
-        if (!$this->hasUser($user)) {
+        if (! $this->hasUser($user)) {
             $this->members()->attach($user->id, ['role' => $role]);
         }
     }
@@ -154,6 +162,7 @@ class Project extends Model
     public function isUserAdmin(User $user): bool
     {
         $member = $this->members()->where('user_id', $user->id)->first();
+
         return $member && $member->pivot->role === 'admin';
     }
 

@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasColumn('tasks', 'parent_id')) {
-            Schema::table('tasks', function (Blueprint $table) {
-                $table->foreignId('parent_id')
-                    ->nullable()
-                    ->after('project_id')
-                    ->constrained('tasks')
-                    ->onDelete('cascade');
-            });
-        }
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->foreignId('sprint_id')
+                ->nullable()
+                ->constrained('sprints')
+                ->nullOnDelete();
+
+            $table->index('sprint_id');
+        });
     }
 
     /**
@@ -28,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('parent_id');
+            $table->dropConstrainedForeignId('sprint_id');
         });
     }
 };

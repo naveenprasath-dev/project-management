@@ -25,6 +25,7 @@ class ProjectViewController extends Controller
         $project->load([
             'members',
             'statuses',
+            'sprints',
             'tasks' => function ($query) use ($filters) {
                 $query->whereNull('parent_id');
 

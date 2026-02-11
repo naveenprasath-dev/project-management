@@ -1,15 +1,15 @@
 <?php
 
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SpaceController;
+use App\Http\Controllers\SpaceMemberController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
-use App\Http\Controllers\SpaceController;
-use App\Http\Controllers\SpaceMemberController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\CommentController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -19,7 +19,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('help', fn() => Inertia::render('help'))->name('help');
+    Route::get('help', fn () => Inertia::render('help'))->name('help');
 
     // Space Management
     Route::get('spaces/{space:slug}/settings', [SpaceController::class, 'edit'])->name('spaces.settings');
@@ -40,7 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('spaces/{space:slug}/projects/{project:slug}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('spaces.projects.update');
     Route::post('spaces/{space:slug}/projects/{project:slug}/toggle-archive', [\App\Http\Controllers\ProjectController::class, 'toggleArchive'])->name('spaces.projects.toggleArchive');
     Route::delete('spaces/{space:slug}/projects/{project:slug}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('spaces.projects.destroy');
-    
+
     // Project Member Management
     Route::post('spaces/{space:slug}/projects/{project:slug}/members', [\App\Http\Controllers\ProjectController::class, 'addMember'])->name('projects.members.add');
     Route::delete('spaces/{space:slug}/projects/{project:slug}/members/{user}', [\App\Http\Controllers\ProjectController::class, 'removeMember'])->name('projects.members.remove');
@@ -49,6 +49,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('spaces/{space:slug}/projects/{project:slug}/statuses', [\App\Http\Controllers\ProjectStatusController::class, 'store'])->name('projects.statuses.store');
     Route::patch('spaces/{space:slug}/projects/{project:slug}/statuses/{status}', [\App\Http\Controllers\ProjectStatusController::class, 'update'])->name('projects.statuses.update');
     Route::delete('spaces/{space:slug}/projects/{project:slug}/statuses/{status}', [\App\Http\Controllers\ProjectStatusController::class, 'destroy'])->name('projects.statuses.destroy');
+
+    // Sprint Management
+    Route::post('spaces/{space:slug}/projects/{project:slug}/sprints', [\App\Http\Controllers\SprintController::class, 'store'])->name('projects.sprints.store');
+    Route::patch('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'update'])->name('projects.sprints.update');
+    Route::delete('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'destroy'])->name('projects.sprints.destroy');
+    Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/start', [\App\Http\Controllers\SprintController::class, 'start'])->name('projects.sprints.start');
+    Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/complete', [\App\Http\Controllers\SprintController::class, 'complete'])->name('projects.sprints.complete');
 
     // Task Management (Nested within Spaces)
     Route::get('spaces/{space:slug}/tasks', [TaskController::class, 'index'])->name('spaces.tasks.index');

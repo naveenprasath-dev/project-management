@@ -28,6 +28,7 @@ class Task extends Model
         'due_date',
         'created_by',
         'assigned_to',
+        'sprint_id',
         'order',
     ];
 
@@ -67,6 +68,14 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * Sprint this task belongs to.
+     */
+    public function sprint(): BelongsTo
+    {
+        return $this->belongsTo(Sprint::class);
     }
 
     /**

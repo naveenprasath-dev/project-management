@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type {
-    User} from 'lucide-react';
+    User
+} from 'lucide-react';
 import {
     ArrowLeft,
     Settings,
@@ -21,6 +22,7 @@ import BoardView from '@/components/tasks/board-view';
 import TaskFilterBar from '@/components/tasks/task-filter-bar';
 import TaskModal from '@/components/tasks/task-modal';
 import TasksList from '@/components/tasks/tasks-list';
+import SprintList from '@/components/sprints/sprint-list';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -57,6 +59,7 @@ interface Task {
     due_date?: string;
     priority?: string;
     type: string;
+    sprint_id?: number | null;
     [key: string]: any;
 }
 
@@ -71,6 +74,7 @@ interface Project {
     tasks: Task[];
     tasks_count?: number;
     statuses?: any[];
+    sprints?: any[];
 }
 
 interface Space {
@@ -85,13 +89,14 @@ interface ShowProps {
     space: Space;
     project: Project;
     filters: any;
+    sprints: any[];
     can: {
         manageMembers: boolean;
     };
 }
 
 export default function Show({ space, project, filters, can }: ShowProps) {
-    const [activeTab, setActiveTab] = useState<'tasks' | 'members' | 'settings'>('tasks');
+    const [activeTab, setActiveTab] = useState<'tasks' | 'sprints' | 'members' | 'settings'>('tasks');
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
     const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -144,6 +149,7 @@ export default function Show({ space, project, filters, can }: ShowProps) {
 
     const tabs = [
         { id: 'tasks', label: 'Tasks', icon: ListTodo, count: project.tasks?.length || 0 },
+        { id: 'sprints', label: 'Sprints', icon: LayoutGrid, count: project.sprints?.length || 0 },
         { id: 'members', label: 'Members', icon: Users, count: project.members?.length || 0 },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
@@ -379,6 +385,15 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                         </div>
                     )}
 
+                    {/* Sprints Tab */}
+                    {activeTab === 'sprints' && (
+                        <SprintList
+                            space={space}
+                            project={project}
+                            sprints={project.sprints || []}
+                        />
+                    )}
+
                     {/* Members Tab */}
                     {activeTab === 'members' && (
                         <div className="max-w-3xl">
@@ -538,6 +553,7 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                 project={project}
                 task={selectedTask}
                 statuses={effectiveStatuses}
+                sprints={project.sprints || []}
                 isOpen={isTaskModalOpen}
                 onClose={() => { setIsTaskModalOpen(false); setSelectedTask(null); }}
                 onTaskSelect={(task) => setSelectedTask(task)}
