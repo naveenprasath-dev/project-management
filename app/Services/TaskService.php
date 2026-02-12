@@ -41,7 +41,7 @@ class TaskService extends BaseService
             $q->where('assigned_to', $userId)
                 ->orWhereHas('assignees', fn ($sq) => $sq->where('user_id', $userId));
         })
-            ->with(['status', 'assignees', 'creator', 'space'])
+            ->with(['status', 'assignees', 'creator', 'space.statuses', 'space.projects.sprints']) // Load space structure for modal
             ->orderBy('due_date', 'asc')
             ->orderBy('priority', 'desc');
 

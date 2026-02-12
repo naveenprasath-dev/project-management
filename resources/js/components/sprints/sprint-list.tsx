@@ -1,4 +1,4 @@
-import { router, useForm } from '@inertiajs/react';
+import { router, useForm, Link } from '@inertiajs/react';
 import {
     Calendar,
     ChevronRight,
@@ -167,7 +167,12 @@ function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space:
             <div className="flex items-start justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                        <h4 className="font-bold text-lg">{sprint.name}</h4>
+                        <Link
+                            href={`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}`}
+                            className="font-bold text-lg hover:underline decoration-primary underline-offset-4"
+                        >
+                            {sprint.name}
+                        </Link>
                         <span className={cn(
                             "px-2 py-0.5 text-[10px] font-bold rounded-full uppercase",
                             sprint.status === 'active' ? "bg-primary text-primary-foreground" :

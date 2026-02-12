@@ -296,6 +296,11 @@ export default function MyTasks({ tasks, statuses, filters }: PageProps) {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     task={selectedTask}
+                    statuses={selectedTask.space?.statuses || statuses}
+                    sprints={
+                        // Aggregate sprints from the task's space projects
+                        selectedTask.space?.projects?.flatMap((p: any) => p.sprints || []) || []
+                    }
                 />
             )}
         </AppLayout>

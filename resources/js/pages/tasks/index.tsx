@@ -408,6 +408,10 @@ export default function Index({ space, tasks, filters, members }: PageProps) {
                 onClose={() => setIsModalOpen(false)}
                 task={selectedTask}
                 onTaskSelect={(task) => setSelectedTask(task)}
+                sprints={
+                    // Aggregate sprints from the space projects
+                    space.projects?.flatMap((p: any) => p.sprints || []) || []
+                }
             />
         </AppLayout>
     );

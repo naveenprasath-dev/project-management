@@ -211,6 +211,10 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
                     onClose={() => setIsModalOpen(false)}
                     task={selectedTask}
                     statuses={selectedTask?.space?.statuses || spaces[0]?.statuses || []}
+                    sprints={
+                        // Aggregate all sprints from all projects in the space
+                        (selectedTask?.space || spaces[0])?.projects?.flatMap((p: any) => p.sprints || []) || []
+                    }
                 />
             )}
         </AppLayout>

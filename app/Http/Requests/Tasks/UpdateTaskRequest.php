@@ -26,6 +26,7 @@ class UpdateTaskRequest extends FormRequest
             'due_date' => ['nullable', 'date'],
             'assignee_ids' => ['sometimes', 'array'],
             'assignee_ids.*' => ['exists:users,id'],
+            'sprint_id' => ['nullable', 'exists:sprints,id'],
             'order' => ['sometimes', 'integer'],
         ];
     }

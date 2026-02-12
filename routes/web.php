@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'destroy'])->name('projects.sprints.destroy');
     Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/start', [\App\Http\Controllers\SprintController::class, 'start'])->name('projects.sprints.start');
     Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/complete', [\App\Http\Controllers\SprintController::class, 'complete'])->name('projects.sprints.complete');
+    Route::get('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'show'])->name('projects.sprints.show');
 
     // Task Management (Nested within Spaces)
     Route::get('spaces/{space:slug}/tasks', [TaskController::class, 'index'])->name('spaces.tasks.index');

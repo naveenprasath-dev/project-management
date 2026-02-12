@@ -48,7 +48,7 @@ class MyWorkController extends Controller
         // Fetch user's spaces with necessary details for TaskModal
         $spaces = $request->user()->spaces()
             ->with(['members', 'statuses', 'projects' => function ($q) {
-                $q->where('is_archived', false);
+                $q->where('is_archived', false)->with('sprints');
             }])
             ->get();
 

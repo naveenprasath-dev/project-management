@@ -1,3 +1,5 @@
+<?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Project;
@@ -7,6 +9,72 @@ use Illuminate\Http\Request;
 
 class SprintController extends Controller
 {
+    /**
+     * Display the specified sprint.
+     */
+    public function show(Request $request, Space $space, Project $project, Sprint $sprint)
+    {
+        $this->authorize('view', $project);
+
+        // Capture filters
+        $filters = $request->only(['search', 'status_id', 'priority', 'assigned_to', 'type']);
+
+        // Load sprint tasks with filters
+        $sprint->load(['tasks' => function ($query) use ($filters) {
+            $query->whereNull('parent_id');
+
+            // Apply filters
+            if (! empty($filters['search'])) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('title', 'like', "%{$filters['search']}%")
+                        ->orWhere('description', 'like', "%{$filters['search']}%");
+                });
+            }
+
+            if (! empty($filters['status_id']) && $filters['status_id'] !== 'all') {
+                $query->where('status_id', $filters['status_id']);
+            }
+
+            if (! empty($filters['priority']) && $filters['priority'] !== 'all') {
+                $query->where('priority', $filters['priority']);
+            }
+
+            if (! empty($filters['assigned_to']) && $filters['assigned_to'] !== 'all') {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('assigned_to', $filters['assigned_to'])
+                        ->orWhereHas('assignees', fn ($sq) => $sq->where('user_id', $filters['assigned_to']));
+                });
+            }
+
+            if (! empty($filters['type']) && $filters['type'] !== 'all') {
+                $query->where('type', $filters['type']);
+            }
+
+            // Ensure correct relationships on tasks
+            $query->with(['assignees', 'status', 'children.status', 'children.assignees', 'children.parent', 'parent', 'space'])->latest();
+        }]);
+
+        // Transform members to match frontend interface (reusing logic from ProjectViewController)
+        $project->load('members');
+        $project->setRelation('members', $project->members->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'user' => $user,
+                'role' => $user->pivot->role ?? 'member',
+            ];
+        }));
+
+        return \Inertia\Inertia::render('projects/sprints/show', [
+            'space' => $space->load(['members', 'statuses', 'projects']),
+            'project' => $project,
+            'sprint' => $sprint,
+            'filters' => $filters,
+            'can' => [
+                'manageMembers' => $request->user()->can('manageMembers', $project),
+            ],
+        ]);
+    }
+
     /**
      * Store a newly created sprint.
      */
