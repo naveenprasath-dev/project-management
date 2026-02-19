@@ -21,7 +21,7 @@ class SprintController extends Controller
 
         // Load sprint tasks with filters
         $sprint->load(['tasks' => function ($query) use ($filters) {
-            $query->whereNull('parent_id');
+            $query->whereNull('parent_id')->notArchived();
 
             // Apply filters
             if (! empty($filters['search'])) {
@@ -153,5 +153,29 @@ class SprintController extends Controller
         $sprint->update(['status' => 'completed', 'end_date' => now()]);
 
         return back()->with('success', 'Sprint completed!');
+    }
+
+    /**
+     * Archive the sprint.
+     */
+    public function archive(Space $space, Project $project, Sprint $sprint)
+    {
+        $this->authorize('update', $project);
+
+        $sprint->archive();
+
+        return back()->with('success', 'Sprint archived.');
+    }
+
+    /**
+     * Unarchive the sprint.
+     */
+    public function unarchive(Space $space, Project $project, Sprint $sprint)
+    {
+        $this->authorize('update', $project);
+
+        $sprint->unarchive();
+
+        return back()->with('success', 'Sprint unarchived.');
     }
 }

@@ -8,7 +8,8 @@ import {
     Trash2,
     Plus,
     Clock,
-    Target
+    Target,
+    Archive
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -159,6 +160,12 @@ function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space:
         }
     };
 
+    const handleArchive = () => {
+        if (confirm('Archive this sprint? it will be moved to the archive section.')) {
+            router.post(`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/archive`);
+        }
+    };
+
     return (
         <div className={cn(
             "p-5 rounded-xl border bg-card transition-all hover:shadow-md group",
@@ -222,6 +229,9 @@ function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space:
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={onEdit}>
                                 Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleArchive}>
+                                <Archive className="w-4 h-4 mr-2" /> Archive Sprint
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
                                 <Trash2 className="w-4 h-4 mr-2" /> Delete Sprint

@@ -1,7 +1,7 @@
 import { useForm, router } from '@inertiajs/react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { Pencil, Loader2, PlusCircle, Save, X, User as UserIcon, ChevronDown, Clock, History, MessageSquare, ListTodo, Calendar, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Pencil, Loader2, PlusCircle, Save, X, User as UserIcon, ChevronDown, Clock, History, MessageSquare, ListTodo, Calendar, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2, ChevronRight, ArrowLeft, Archive } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { Badge } from '@/components/ui/badge';
@@ -366,6 +366,16 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
         method(url, {
             onSuccess: () => {
                 reset();
+                onClose();
+            },
+        });
+    };
+
+    const handleArchive = () => {
+        if (!task || !confirm('Archive this task? it will be moved to the archive section.')) return;
+
+        router.post(`/spaces/${space.slug}/tasks/${task.id}/archive`, {}, {
+            onSuccess: () => {
                 onClose();
             },
         });
@@ -1115,7 +1125,20 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                     </div>
                 </div>
 
-                <DialogFooter className="p-8 border-t bg-muted/20 backdrop-blur-sm sm:justify-end">
+                <DialogFooter className="p-8 border-t bg-muted/20 backdrop-blur-sm sm:justify-[between]">
+                    <div className="flex-1">
+                        {task && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={handleArchive}
+                                className="h-10 px-4 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            >
+                                <Archive className="w-4 h-4 mr-2" />
+                                Archive Task
+                            </Button>
+                        )}
+                    </div>
                     <div className="flex gap-4">
                         <Button type="button" variant="ghost" onClick={onClose} className="h-10 px-8 font-medium rounded-lg hover:bg-muted">Cancel</Button>
                         <Button

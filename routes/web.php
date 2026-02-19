@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
@@ -56,13 +57,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'destroy'])->name('projects.sprints.destroy');
     Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/start', [\App\Http\Controllers\SprintController::class, 'start'])->name('projects.sprints.start');
     Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/complete', [\App\Http\Controllers\SprintController::class, 'complete'])->name('projects.sprints.complete');
+    Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/archive', [\App\Http\Controllers\SprintController::class, 'archive'])->name('projects.sprints.archive');
+    Route::post('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}/unarchive', [\App\Http\Controllers\SprintController::class, 'unarchive'])->name('projects.sprints.unarchive');
     Route::get('spaces/{space:slug}/projects/{project:slug}/sprints/{sprint}', [\App\Http\Controllers\SprintController::class, 'show'])->name('projects.sprints.show');
+
+    // Project Archive
+    Route::get('spaces/{space:slug}/projects/{project:slug}/archive', [ArchiveController::class, 'index'])->name('projects.archive');
 
     // Task Management (Nested within Spaces)
     Route::get('spaces/{space:slug}/tasks', [TaskController::class, 'index'])->name('spaces.tasks.index');
     Route::post('spaces/{space:slug}/tasks', [TaskController::class, 'store'])->name('spaces.tasks.store');
     Route::patch('spaces/{space:slug}/tasks/{task}', [TaskController::class, 'update'])->name('spaces.tasks.update');
     Route::delete('spaces/{space:slug}/tasks/{task}', [TaskController::class, 'destroy'])->name('spaces.tasks.destroy');
+    Route::post('spaces/{space:slug}/tasks/{task}/archive', [TaskController::class, 'archive'])->name('spaces.tasks.archive');
+    Route::post('spaces/{space:slug}/tasks/{task}/unarchive', [TaskController::class, 'unarchive'])->name('spaces.tasks.unarchive');
     Route::get('spaces/{space:slug}/tasks/{task}/activities', [TaskController::class, 'activities'])->name('spaces.tasks.activities');
     Route::get('spaces/{space:slug}/tasks/{task}/comments', [CommentController::class, 'index'])->name('spaces.tasks.comments.index');
     Route::post('spaces/{space:slug}/tasks/{task}/comments', [CommentController::class, 'store'])->name('spaces.tasks.comments.store');

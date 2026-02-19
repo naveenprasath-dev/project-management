@@ -30,6 +30,7 @@ class Task extends Model
         'assigned_to',
         'sprint_id',
         'order',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class Task extends Model
             'due_date' => 'datetime',
             'order' => 'integer',
             'type' => TaskType::class,
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -145,5 +147,25 @@ class Task extends Model
     {
         return $query->where('due_date', '<', now())
             ->whereHas('status', fn ($q) => $q->where('is_final', false));
+    }
+
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function archive(): bool
+    {
+        return $this->update(['archived_at' => now()]);
+    }
+
+    public function unarchive(): bool
+    {
+        return $this->update(['archived_at' => null]);
     }
 }

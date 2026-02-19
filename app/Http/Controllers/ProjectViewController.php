@@ -25,9 +25,11 @@ class ProjectViewController extends Controller
         $project->load([
             'members',
             'statuses',
-            'sprints',
+            'sprints' => function ($query) {
+                $query->notArchived();
+            },
             'tasks' => function ($query) use ($filters) {
-                $query->whereNull('parent_id');
+                $query->whereNull('parent_id')->notArchived();
 
                 // Apply filters
                 if (! empty($filters['search'])) {

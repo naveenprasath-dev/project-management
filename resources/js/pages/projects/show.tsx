@@ -13,6 +13,7 @@ import {
     CheckCircle2,
     LayoutGrid,
     List,
+    Archive,
     FolderPlus,
     Check
 } from 'lucide-react';
@@ -152,6 +153,7 @@ export default function Show({ space, project, filters, can }: ShowProps) {
         { id: 'sprints', label: 'Sprints', icon: LayoutGrid, count: project.sprints?.length || 0 },
         { id: 'members', label: 'Members', icon: Users, count: project.members?.length || 0 },
         { id: 'settings', label: 'Settings', icon: Settings },
+        { id: 'archive', label: 'Archive', icon: Archive, href: `/spaces/${space.slug}/projects/${project.slug}/archive` },
     ];
 
     const completedTasks = project.tasks?.filter(t => t.status?.name?.toLowerCase().includes('done') || t.status?.name?.toLowerCase().includes('complete')).length || 0;
@@ -196,27 +198,40 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                     <div className="flex items-center gap-x-2">
                         <nav className="flex items-center mr-2 bg-muted/50 p-1 rounded-lg border">
                             {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={cn(
-                                        "flex items-center gap-x-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                                        activeTab === tab.id
-                                            ? "bg-background text-primary shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                    )}
-                                >
-                                    <tab.icon className="w-3.5 h-3.5" />
-                                    {tab.label}
-                                    {tab.count !== undefined && (
-                                        <span className={cn(
-                                            "ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full",
-                                            activeTab === tab.id ? "bg-primary/10 text-primary" : "bg-muted-foreground/10 text-muted-foreground"
-                                        )}>
-                                            {tab.count}
-                                        </span>
-                                    )}
-                                </button>
+                                tab.href ? (
+                                    <Link
+                                        key={tab.id}
+                                        href={tab.href}
+                                        className={cn(
+                                            "flex items-center gap-x-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        )}
+                                    >
+                                        <tab.icon className="w-3.5 h-3.5" />
+                                        {tab.label}
+                                    </Link>
+                                ) : (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as any)}
+                                        className={cn(
+                                            "flex items-center gap-x-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                                            activeTab === tab.id
+                                                ? "bg-background text-primary shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        )}
+                                    >
+                                        <tab.icon className="w-3.5 h-3.5" />
+                                        {tab.label}
+                                        {tab.count !== undefined && (
+                                            <span className={cn(
+                                                "ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full",
+                                                activeTab === tab.id ? "bg-primary/10 text-primary" : "bg-muted-foreground/10 text-muted-foreground"
+                                            )}>
+                                                {tab.count}
+                                            </span>
+                                        )}
+                                    </button>
+                                )
                             ))}
                         </nav>
 

@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { Calendar, User, MoreHorizontal, ChevronRight, MessageSquare, GripVertical, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Calendar, User, MoreHorizontal, ChevronRight, MessageSquare, GripVertical, Star, Bug, TrendingUp, Search, Settings, ShieldCheck, CheckCircle2, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,6 +52,12 @@ export default function TaskTableRow({
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this task?')) {
             router.delete(`/spaces/${space.slug}/tasks/${task.id}`);
+        }
+    };
+
+    const handleArchive = () => {
+        if (confirm('Archive this task? it will be moved to the archive section.')) {
+            router.post(`/spaces/${space.slug}/tasks/${task.id}/archive`);
         }
     };
 
@@ -149,6 +155,9 @@ export default function TaskTableRow({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(task)}>Edit Task</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleArchive}>
+                            <Archive className="w-4 h-4 mr-2" /> Archive Task
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={handleDelete}>Delete Task</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

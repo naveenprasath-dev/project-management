@@ -126,4 +126,32 @@ class TaskController extends Controller
 
         return response()->json($task->activities);
     }
+
+    /**
+     * Archive the specified task.
+     */
+    public function archive(Request $request, Space $space, Task $task)
+    {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
+            abort(403);
+        }
+
+        $task->archive();
+
+        return back()->with('success', 'Task archived.');
+    }
+
+    /**
+     * Unarchive the specified task.
+     */
+    public function unarchive(Request $request, Space $space, Task $task)
+    {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
+            abort(403);
+        }
+
+        $task->unarchive();
+
+        return back()->with('success', 'Task unarchived.');
+    }
 }
