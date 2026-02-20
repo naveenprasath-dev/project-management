@@ -55,6 +55,8 @@ class TaskController extends Controller
             $request->user()
         );
 
+        $task->load('assignees');
+
         // Notify assigned users
         foreach ($task->assignees as $assignee) {
             if ($assignee->id !== $request->user()->id) {
@@ -89,13 +91,26 @@ class TaskController extends Controller
 
         // Notify if status changed
         if ($request->has('status_id') && $request->status_id != $oldStatusId) {
-            $task->creator->notify(new GeneralNotification(
+            $task->refresh();
+            $notification = new GeneralNotification(
                 'Task Status Updated',
                 "Task '{$task->title}' is now '{$task->status->name}'",
                 "/spaces/{$space->slug}/tasks",
                 'status_changed',
                 ['task_id' => $task->id]
-            ));
+            );
+
+            // Notify all assignees
+            foreach ($task->assignees as $assignee) {
+                if ($assignee->id !== $request->user()->id) {
+                    $assignee->notify($notification);
+                }
+            }
+
+            // Also notify creator if not the one who changed it and not an assignee (already handled above if they are)
+            if ($task->created_by !== $request->user()->id && ! $task->assignees->contains($task->created_by)) {
+                $task->creator->notify($notification);
+            }
         }
 
         return back()->with('success', 'Task updated successfully.');

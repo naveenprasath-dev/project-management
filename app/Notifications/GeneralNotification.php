@@ -29,7 +29,23 @@ class GeneralNotification extends Notification implements ShouldQueue
      */
     public function via($notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', 'mail'];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail($notifiable): \Illuminate\Notifications\Messages\MailMessage
+    {
+        $message = (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject($this->title)
+            ->line($this->body);
+
+        if ($this->url) {
+            $message->action('View Details', config('app.url').$this->url);
+        }
+
+        return $message;
     }
 
     /**
