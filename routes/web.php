@@ -6,11 +6,16 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SpaceController;
+use App\Http\Controllers\SpaceInvitationController;
 use App\Http\Controllers\SpaceMemberController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+
+// Space invitation — public view, auth-required accept
+Route::get('invitations/{token}', [SpaceInvitationController::class, 'show'])->name('invitations.show');
+Route::post('invitations/{token}/accept', [SpaceInvitationController::class, 'accept'])->middleware('auth')->name('invitations.accept');
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -89,9 +94,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
-    // Renamed ID parameter to avoid confusion
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 require __DIR__.'/settings.php';

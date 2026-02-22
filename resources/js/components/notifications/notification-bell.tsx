@@ -69,6 +69,23 @@ export default function NotificationBell() {
         setUnreadCount(0);
     };
 
+    const dismiss = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const target = notifications.find(n => n.id === id);
+        await axios.delete(`/notifications/${id}`);
+        setNotifications(prev => prev.filter(n => n.id !== id));
+        if (target && !target.read_at) {
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+    };
+
+    const clearAll = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        await axios.delete('/notifications');
+        setNotifications([]);
+        setUnreadCount(0);
+    };
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -90,19 +107,32 @@ export default function NotificationBell() {
             <DropdownMenuContent className="w-80 p-0" align="end">
                 <div className="flex items-center justify-between p-4 border-b">
                     <h4 className="font-semibold text-sm">Notifications</h4>
-                    {unreadCount > 0 && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                markAllAsRead();
-                            }}
-                            className="text-xs h-8 px-2"
-                        >
-                            Mark all read
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-1">
+                        {unreadCount > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAllAsRead();
+                                }}
+                                className="text-xs h-8 px-2"
+                            >
+                                Mark all read
+                            </Button>
+                        )}
+                        {notifications.length > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearAll}
+                                className="text-xs h-8 px-2 text-muted-foreground hover:text-destructive"
+                            >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Clear all
+                            </Button>
+                        )}
+                    </div>
                 </div>
                 <div className="max-h-[400px] overflow-y-auto">
                     {notifications.length === 0 ? (
@@ -137,19 +167,31 @@ export default function NotificationBell() {
                                         </Link>
                                     </div>
 
-                                    {!n.read_at && (
+                                    <div className="absolute right-2 bottom-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {!n.read_at && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                title="Mark as read"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    markAsRead(n.id);
+                                                }}
+                                            >
+                                                <Check className="h-3 w-3" />
+                                            </Button>
+                                        )}
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-6 w-6 absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                markAsRead(n.id);
-                                            }}
+                                            className="h-6 w-6 hover:text-destructive"
+                                            title="Dismiss"
+                                            onClick={(e) => dismiss(n.id, e)}
                                         >
-                                            <Check className="h-3 w-3" />
+                                            <Trash2 className="h-3 w-3" />
                                         </Button>
-                                    )}
+                                    </div>
                                 </div>
                             ))}
                         </div>

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Models\Comment;
 use App\Models\Space;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\GeneralNotification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
@@ -18,7 +17,7 @@ class CommentController extends Controller
      */
     public function index(Request $request, Space $space, Task $task)
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 
@@ -30,7 +29,7 @@ class CommentController extends Controller
      */
     public function store(Request $request, Space $space, Task $task)
     {
-        if (!$request->user()->hasSpaceAccess($space->id)) {
+        if (! $request->user()->hasSpaceAccess($space->id)) {
             abort(403);
         }
 
@@ -44,25 +43,48 @@ class CommentController extends Controller
                 'content' => $request->content,
             ]);
 
-            // Simple mention parsing for notifications
-            // Logic: find "@[Name]" or "@Name"
-            preg_match_all('/@([\w\s]+?)(?=\s|$)/', $request->content, $matches);
-            
-            if (!empty($matches[1])) {
-                $mentionedNames = array_map('trim', $matches[1]);
-                $users = User::whereIn('name', $mentionedNames)->get();
+            $task->load(['assignees', 'creator', 'space']);
+            $notifiedIds = [$request->user()->id];
 
-                foreach ($users as $user) {
-                    if ($user->id !== $request->user()->id) {
+            // Handle @mention notifications first (more specific, takes priority)
+            preg_match_all('/@([\w\s]+?)(?=\s|$)/', $request->content, $matches);
+
+            if (! empty($matches[1])) {
+                $mentionedNames = array_map('trim', $matches[1]);
+                $mentionedUsers = User::whereIn('name', $mentionedNames)->get();
+
+                foreach ($mentionedUsers as $user) {
+                    if (! in_array($user->id, $notifiedIds)) {
                         $user->notify(new GeneralNotification(
-                            "You were mentioned",
+                            'You were mentioned',
                             "{$request->user()->name} mentioned you in a comment on: {$task->title}",
                             "/spaces/{$task->space->slug}/tasks",
                             'task_mention',
                             ['task_id' => $task->id, 'comment_id' => $comment->id]
                         ));
+                        $notifiedIds[] = $user->id;
                     }
                 }
+            }
+
+            // Notify remaining involved parties (assignees + creator) about the new comment
+            $commentNotification = new GeneralNotification(
+                'New Comment on Task',
+                "{$request->user()->name} commented on: {$task->title}",
+                "/spaces/{$task->space->slug}/tasks",
+                'task_comment',
+                ['task_id' => $task->id, 'comment_id' => $comment->id]
+            );
+
+            foreach ($task->assignees as $assignee) {
+                if (! in_array($assignee->id, $notifiedIds)) {
+                    $assignee->notify($commentNotification);
+                    $notifiedIds[] = $assignee->id;
+                }
+            }
+
+            if ($task->creator && ! in_array($task->created_by, $notifiedIds)) {
+                $task->creator->notify($commentNotification);
             }
 
             return $comment;

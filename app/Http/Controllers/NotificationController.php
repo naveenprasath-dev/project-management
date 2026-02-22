@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
 {
@@ -51,7 +50,30 @@ class NotificationController extends Controller
     public function unreadCount(Request $request)
     {
         return response()->json([
-            'count' => $request->user()->unreadNotifications()->count()
+            'count' => $request->user()->unreadNotifications()->count(),
         ]);
+    }
+
+    /**
+     * Delete a specific notification.
+     */
+    public function destroy(Request $request, string $id): \Illuminate\Http\JsonResponse
+    {
+        $request->user()
+            ->notifications()
+            ->findOrFail($id)
+            ->delete();
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    /**
+     * Delete all notifications for the current user.
+     */
+    public function clearAll(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return response()->json(['status' => 'ok']);
     }
 }

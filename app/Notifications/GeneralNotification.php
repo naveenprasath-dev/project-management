@@ -6,6 +6,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class GeneralNotification extends Notification implements ShouldQueue
 {
@@ -18,7 +20,7 @@ class GeneralNotification extends Notification implements ShouldQueue
         public string $title,
         public string $body,
         public string $url,
-        public string $type, // 'task_assigned', 'mention', 'status_changed', 'space_invite'
+        public string $type, // 'task_assigned', 'task_mention', 'status_changed', 'task_updated', 'task_comment'
         public array $metadata = []
     ) {}
 
@@ -29,7 +31,40 @@ class GeneralNotification extends Notification implements ShouldQueue
      */
     public function via($notifiable): array
     {
-        return ['database', 'broadcast', 'mail'];
+        $channels = ['database', 'broadcast'];
+
+        if ($this->isMailConfigured()) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
+    }
+
+    /**
+     * Check if mail is configured and usable.
+     * The 'array' and 'log' mailers always work. SMTP requires a host.
+     */
+    private function isMailConfigured(): bool
+    {
+        $mailer = config('mail.default');
+
+        if (in_array($mailer, ['array', 'log'])) {
+            return true;
+        }
+
+        return ! empty(config("mail.mailers.{$mailer}.host"));
+    }
+
+    /**
+     * Handle a failed notification job — log instead of surfacing the error.
+     */
+    public function failed(Throwable $exception): void
+    {
+        Log::error('Notification delivery failed', [
+            'type' => $this->type,
+            'title' => $this->title,
+            'error' => $exception->getMessage(),
+        ]);
     }
 
     /**

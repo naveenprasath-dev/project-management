@@ -15,7 +15,7 @@ class UpdateSpaceMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'exists:users,id'],
+            'email' => ['required', 'email'],
             'role' => ['required', Rule::in(['admin', 'member', 'viewer'])],
         ];
     }

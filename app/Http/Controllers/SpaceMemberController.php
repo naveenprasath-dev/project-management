@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Spaces\UpdateSpaceMemberRequest;
+use App\Mail\SpaceInvitationMail;
 use App\Models\Space;
+use App\Models\SpaceInvitation;
 use App\Models\User;
 use App\Services\SpaceService;
-use App\Notifications\GeneralNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class SpaceMemberController extends Controller
 {
@@ -17,33 +20,45 @@ class SpaceMemberController extends Controller
     ) {}
 
     /**
-     * Add or Update a member in the space.
+     * Invite a member by email. Adds directly if user exists, otherwise sends an invite email.
      */
     public function store(UpdateSpaceMemberRequest $request, Space $space)
     {
-        if (!$request->user()->canManageSpace($space)) {
+        if (! $request->user()->canManageSpace($space)) {
             abort(403);
         }
 
-        $user = User::findOrFail($request->user_id);
-        
-        $this->spaceService->addMember($space, $user, $request->role);
+        $existingUser = User::where('email', $request->email)->first();
 
-        // Invalidate access cache for this specific space
-        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_space_access_{$space->id}");
+        if ($existingUser) {
+            $this->spaceService->addMember($space, $existingUser, $request->role);
 
-        // Notify user of space invite/addition
-        if ($user->id !== $request->user()->id) {
-            $user->notify(new GeneralNotification(
-                "Added to Space",
-                "You have been added to the space: {$space->name}",
-                "/spaces/{$space->slug}",
-                'space_invite',
-                ['space_id' => $space->id]
-            ));
+            Cache::forget("user_{$existingUser->id}_space_access_{$space->id}");
+
+            if ($existingUser->id !== $request->user()->id) {
+                Mail::to($existingUser->email)->queue(
+                    new SpaceInvitationMail($space, $request->user(), $request->role, userExists: true)
+                );
+            }
+
+            return back()->with('success', "{$existingUser->name} has been added to the space.");
         }
 
-        return back()->with('success', 'Member updated successfully.');
+        // User not in the system — create invitation and send email
+        $invitation = SpaceInvitation::create([
+            'space_id' => $space->id,
+            'invited_by' => $request->user()->id,
+            'email' => $request->email,
+            'role' => $request->role,
+            'token' => Str::random(64),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        Mail::to($request->email)->queue(
+            new SpaceInvitationMail($space, $request->user(), $request->role, userExists: false, invitation: $invitation)
+        );
+
+        return back()->with('success', "Invitation sent to {$request->email}.");
     }
 
     /**
@@ -51,7 +66,7 @@ class SpaceMemberController extends Controller
      */
     public function destroy(Request $request, Space $space, User $user)
     {
-        if (!$request->user()->canManageSpace($space)) {
+        if (! $request->user()->canManageSpace($space)) {
             abort(403);
         }
 
@@ -61,8 +76,7 @@ class SpaceMemberController extends Controller
 
         $this->spaceService->removeMember($space, $user->id);
 
-        // Invalidate access cache for this specific space
-        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_space_access_{$space->id}");
+        Cache::forget("user_{$user->id}_space_access_{$space->id}");
 
         return back()->with('success', 'Member removed successfully.');
     }

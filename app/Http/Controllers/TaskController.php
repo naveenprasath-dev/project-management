@@ -88,29 +88,39 @@ class TaskController extends Controller
 
         $oldStatusId = $task->status_id;
         $this->taskService->update($task, $request->validated());
+        $task->refresh();
 
-        // Notify if status changed
-        if ($request->has('status_id') && $request->status_id != $oldStatusId) {
-            $task->refresh();
-            $notification = new GeneralNotification(
-                'Task Status Updated',
-                "Task '{$task->title}' is now '{$task->status->name}'",
-                "/spaces/{$space->slug}/tasks",
-                'status_changed',
-                ['task_id' => $task->id]
-            );
+        $statusChanged = $request->has('status_id') && $request->status_id != $oldStatusId;
 
-            // Notify all assignees
-            foreach ($task->assignees as $assignee) {
-                if ($assignee->id !== $request->user()->id) {
-                    $assignee->notify($notification);
-                }
+        if ($statusChanged) {
+            $title = 'Task Status Updated';
+            $body = "Task '{$task->title}' is now '{$task->status->name}'";
+            $type = 'status_changed';
+        } else {
+            $title = 'Task Updated';
+            $body = "{$request->user()->name} updated task: {$task->title}";
+            $type = 'task_updated';
+        }
+
+        $notification = new GeneralNotification(
+            $title,
+            $body,
+            "/spaces/{$space->slug}/tasks",
+            $type,
+            ['task_id' => $task->id]
+        );
+
+        $notifiedIds = [$request->user()->id];
+
+        foreach ($task->assignees as $assignee) {
+            if (! in_array($assignee->id, $notifiedIds)) {
+                $assignee->notify($notification);
+                $notifiedIds[] = $assignee->id;
             }
+        }
 
-            // Also notify creator if not the one who changed it and not an assignee (already handled above if they are)
-            if ($task->created_by !== $request->user()->id && ! $task->assignees->contains($task->created_by)) {
-                $task->creator->notify($notification);
-            }
+        if ($task->created_by && ! in_array($task->created_by, $notifiedIds)) {
+            $task->creator->notify($notification);
         }
 
         return back()->with('success', 'Task updated successfully.');
