@@ -7,7 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { login } from '@/routes';
-import { store } from '@/routes/register';
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from '@/wayfinder';
+
+// TODO: Replace with `import { store } from '@/routes/register'` when public registration is re-enabled
+const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({ url: store.url(options), method: 'post' });
+store.definition = { methods: ['post'], url: '/register' } satisfies RouteDefinition<['post']>;
+store.url = (options?: RouteQueryOptions) => store.definition.url + queryParams(options);
+store.post = store;
+const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({ action: store.url(options), method: 'post' });
+storeForm.post = storeForm;
+store.form = storeForm;
 
 export default function Register() {
     return (

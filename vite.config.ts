@@ -24,4 +24,7 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
+    optimizeDeps: {
+        include: ['date-fns', '@radix-ui/react-avatar'],
+    },
 });
