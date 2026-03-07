@@ -11,7 +11,7 @@ export default function Welcome({
 
     return (
         <div className="min-h-screen bg-[#050505] text-[#FAFAFA] selection:bg-[#E2FF4D] selection:text-[#050505] font-sans">
-            <Head title="Premium Project Management">
+            <Head title="Project Management">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
             </Head>
@@ -22,7 +22,7 @@ export default function Welcome({
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#E2FF4D] to-[#B8D900] shadow-[0_0_20px_rgba(226,255,77,0.3)]">
                             <svg className="h-6 w-6 text-[#050505]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-60H6" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
                             </svg>
                         </div>
                         <span className="text-xl font-bold tracking-tight text-[#FFFFFF]">Project Flow</span>
