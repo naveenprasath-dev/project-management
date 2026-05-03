@@ -95,8 +95,8 @@ export default function TasksList({ tasks, statuses, space, onEditTask, onCreate
                     <div className="flex-1 min-w-0 mr-4 pl-6">Title</div>
                     <div className="flex items-center gap-x-6 shrink-0">
                         <div className="w-20 text-center">Priority</div>
-                        <div className="w-28 pl-4">Due Date</div>
-                        <div className="w-32 pl-4">Assignee</div>
+                        <div className="w-28">Due Date</div>
+                        <div className="w-32">Assignee</div>
                         <div className="w-8 h-8" />
                     </div>
                 </div>
