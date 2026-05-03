@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Search, Plus, Bell, Settings, HelpCircle, Menu } from 'lucide-react';
+import { Settings, HelpCircle } from 'lucide-react';
+import GlobalSearch from '@/components/global-search';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -38,19 +39,9 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                 </div>
             </div>
 
-            {/* Center: Search (ClickUp Style) */}
+            {/* Center: Search */}
             <div className="hidden lg:flex items-center flex-1 max-w-md mx-8">
-                <div className="relative w-full group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Search tasks, spaces, or documents..."
-                        className="w-full h-9 pl-10 pr-4 bg-muted/50 border-transparent rounded-lg text-sm transition-all focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/10 focus:shadow-sm"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border bg-background text-[10px] font-mono text-muted-foreground pointer-events-none uppercase">
-                        ⌘K
-                    </div>
-                </div>
+                <GlobalSearch />
             </div>
 
             {/* Right: Actions & User Panel */}

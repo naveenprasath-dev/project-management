@@ -196,47 +196,8 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                         </div>
                     </div>
                     <div className="flex items-center gap-x-2">
-                        <nav className="flex items-center mr-2 bg-muted/50 p-1 rounded-lg border">
-                            {tabs.map((tab) => (
-                                tab.href ? (
-                                    <Link
-                                        key={tab.id}
-                                        href={tab.href}
-                                        className={cn(
-                                            "flex items-center gap-x-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-muted"
-                                        )}
-                                    >
-                                        <tab.icon className="w-3.5 h-3.5" />
-                                        {tab.label}
-                                    </Link>
-                                ) : (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as any)}
-                                        className={cn(
-                                            "flex items-center gap-x-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                                            activeTab === tab.id
-                                                ? "bg-background text-primary shadow-sm"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                        )}
-                                    >
-                                        <tab.icon className="w-3.5 h-3.5" />
-                                        {tab.label}
-                                        {tab.count !== undefined && (
-                                            <span className={cn(
-                                                "ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full",
-                                                activeTab === tab.id ? "bg-primary/10 text-primary" : "bg-muted-foreground/10 text-muted-foreground"
-                                            )}>
-                                                {tab.count}
-                                            </span>
-                                        )}
-                                    </button>
-                                )
-                            ))}
-                        </nav>
-
                         {activeTab === 'tasks' && (
-                            <div className="flex items-center gap-x-2">
+                            <>
                                 <Button
                                     variant={memberViewEnabled ? 'secondary' : 'ghost'}
                                     size="sm"
@@ -252,7 +213,7 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                                 <Button size="sm" onClick={() => { setSelectedTask(null); setIsTaskModalOpen(true); }}>
                                     <ListTodo className="w-4 h-4 mr-2" /> New Task
                                 </Button>
-                            </div>
+                            </>
                         )}
                         {activeTab === 'members' && can.manageMembers && (
                             <Button size="sm" onClick={() => setIsMemberModalOpen(true)}>
@@ -261,6 +222,46 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                         )}
                     </div>
                 </header>
+
+                {/* Tab bar in its own dedicated row so it never shifts with action buttons */}
+                <nav className="flex items-center px-6 border-b bg-background">
+                    {tabs.map((tab) => (
+                        tab.href ? (
+                            <Link
+                                key={tab.id}
+                                href={tab.href}
+                                className="flex items-center gap-x-1.5 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative border-b-2 border-transparent -mb-px"
+                            >
+                                <tab.icon className="w-3.5 h-3.5" />
+                                {tab.label}
+                            </Link>
+                        ) : (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={cn(
+                                    "flex items-center gap-x-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative border-b-2 -mb-px",
+                                    activeTab === tab.id
+                                        ? "text-primary border-primary"
+                                        : "text-muted-foreground border-transparent hover:text-foreground hover:border-muted-foreground/30"
+                                )}
+                            >
+                                <tab.icon className="w-3.5 h-3.5" />
+                                {tab.label}
+                                {tab.count !== undefined && (
+                                    <span className={cn(
+                                        "ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full tabular-nums min-w-[18px] text-center",
+                                        activeTab === tab.id
+                                            ? "bg-primary/10 text-primary"
+                                            : "bg-muted text-muted-foreground"
+                                    )}>
+                                        {tab.count}
+                                    </span>
+                                )}
+                            </button>
+                        )
+                    ))}
+                </nav>
 
                 {totalTasks > 0 && (
                     <div className="px-6 py-3 border-b bg-muted/30">

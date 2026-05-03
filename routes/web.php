@@ -5,6 +5,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SpaceController;
 use App\Http\Controllers\SpaceInvitationController;
 use App\Http\Controllers\SpaceMemberController;
@@ -25,6 +26,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('search', [SearchController::class, 'search'])->name('search');
     Route::get('help', fn () => Inertia::render('help'))->name('help');
 
     // Space Management

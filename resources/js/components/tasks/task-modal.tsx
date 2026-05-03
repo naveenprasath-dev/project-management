@@ -900,16 +900,13 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
 
                             <div className="grid gap-3">
                                 <Label htmlFor="due_date" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Due Date</Label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                                    <Input
-                                        id="due_date"
-                                        type="date"
-                                        className="h-11 pl-12 rounded-xl border-2 bg-background font-medium focus:border-primary transition-all"
-                                        value={data.due_date}
-                                        onChange={(e) => setData('due_date', e.target.value)}
-                                    />
-                                </div>
+                                <Input
+                                    id="due_date"
+                                    type="date"
+                                    className="h-11 rounded-xl border-2 bg-background font-medium focus:border-primary transition-all"
+                                    value={data.due_date}
+                                    onChange={(e) => setData('due_date', e.target.value)}
+                                />
                                 {errors.due_date && <p className="text-xs text-destructive font-semibold">{errors.due_date}</p>}
                             </div>
 
@@ -1047,15 +1044,12 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                                                     </SelectContent>
                                                 </Select>
 
-                                                <div className="relative">
-                                                    <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
-                                                    <input
-                                                        type="date"
-                                                        value={subTaskDueDate}
-                                                        onChange={(e) => setSubTaskDueDate(e.target.value)}
-                                                        className="h-8 w-full rounded-lg bg-background border border-muted pl-8 pr-2 text-xs font-medium hover:border-primary/30 focus:border-primary transition-all outline-none"
-                                                    />
-                                                </div>
+                                                <input
+                                                    type="date"
+                                                    value={subTaskDueDate}
+                                                    onChange={(e) => setSubTaskDueDate(e.target.value)}
+                                                    className="h-8 w-full rounded-lg bg-background border border-muted px-2 text-xs font-medium hover:border-primary/30 focus:border-primary transition-all outline-none"
+                                                />
 
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>

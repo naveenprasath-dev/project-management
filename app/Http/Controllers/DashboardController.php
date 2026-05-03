@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use App\Models\Space;
 use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,7 +23,7 @@ class DashboardController extends Controller
 
         // Lineup: Tasks assigned to user that are due soon or overdue
         $lineup = Task::where('assigned_to', $user->id)
-            ->whereIn('status_id', function($query) {
+            ->whereIn('status_id', function ($query) {
                 $query->select('id')->from('task_statuses')->whereNotIn('name', ['Done', 'Completed', 'Closed']);
             })
             ->with(['space', 'status'])
@@ -33,20 +32,20 @@ class DashboardController extends Controller
             ->get();
 
         // Recent Activity: Fetch real logs
-        $recentActivity = $this->activityService->getRecentActivity($user); 
+        $recentActivity = $this->activityService->getRecentActivity($user);
 
         // My Work: Counts
         $counts = [
             'to_do' => Task::where('assigned_to', $user->id)
-                ->whereIn('status_id', function($query) {
+                ->whereIn('status_id', function ($query) {
                     $query->select('id')->from('task_statuses')->where('name', 'To Do');
                 })->count(),
             'in_progress' => Task::where('assigned_to', $user->id)
-                ->whereIn('status_id', function($query) {
+                ->whereIn('status_id', function ($query) {
                     $query->select('id')->from('task_statuses')->where('name', 'In Progress');
                 })->count(),
             'done' => Task::where('assigned_to', $user->id)
-                ->whereIn('status_id', function($query) {
+                ->whereIn('status_id', function ($query) {
                     $query->select('id')->from('task_statuses')->where('name', 'Done');
                 })->count(),
         ];
@@ -55,7 +54,14 @@ class DashboardController extends Controller
             'lineup' => $lineup,
             'counts' => $counts,
             'recentActivity' => $recentActivity,
-            'spaces' => $user->spaces()->withCount('tasks')->get(),
+            'spaces' => $user->spaces()
+                ->with([
+                    'statuses',
+                    'projects:id,space_id,name,slug,color,is_archived',
+                    'members:id,name,email',
+                ])
+                ->withCount('tasks')
+                ->get(),
         ]);
     }
 }

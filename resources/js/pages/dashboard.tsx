@@ -11,11 +11,21 @@ import {
     Search,
     List
 } from 'lucide-react';
+import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/ui/empty-state';
+import TaskModal from '@/components/tasks/task-modal';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem, SharedData } from '@/types';
@@ -48,6 +58,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Dashboard({ lineup, counts, spaces, recentActivity }: PageProps) {
     const { auth } = usePage<SharedData>().props;
     const firstName = auth.user.name.split(' ')[0];
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedSpace, setSelectedSpace] = useState<any>(null);
+
+    const handleCreateTask = (space: any) => {
+        setSelectedSpace(space);
+        setIsModalOpen(true);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -67,10 +84,36 @@ export default function Dashboard({ lineup, counts, spaces, recentActivity }: Pa
                                 <Calendar className="w-4 h-4 mr-2" />
                                 Today
                             </Button>
-                            <Button size="sm">
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Task
-                            </Button>
+                            {spaces.length === 1 ? (
+                                <Button size="sm" onClick={() => handleCreateTask(spaces[0])}>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Create Task
+                                </Button>
+                            ) : spaces.length > 1 ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button size="sm">
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Create Task
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel className="text-xs text-muted-foreground">Select a space</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {spaces.map((space) => (
+                                            <DropdownMenuItem key={space.id} onClick={() => handleCreateTask(space)}>
+                                                <div className="w-3 h-3 rounded-full mr-2 shrink-0" style={{ backgroundColor: space.color }} />
+                                                {space.name}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <Button size="sm" disabled>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Create Task
+                                </Button>
+                            )}
                         </div>
                     </div>
 
@@ -237,6 +280,19 @@ export default function Dashboard({ lineup, counts, spaces, recentActivity }: Pa
                     </div>
                 </main>
             </div>
+            {selectedSpace && (
+                <TaskModal
+                    space={selectedSpace}
+                    members={selectedSpace.members || []}
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedSpace(null);
+                    }}
+                    task={null}
+                    onTaskSelect={() => {}}
+                />
+            )}
         </AppLayout>
     );
 }
