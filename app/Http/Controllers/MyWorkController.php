@@ -27,9 +27,16 @@ class MyWorkController extends Controller
         $statusIds = $tasks->pluck('status_id')->unique();
         $statuses = \App\Models\TaskStatus::whereIn('id', $statusIds)->get();
 
+        $spaces = $request->user()->spaces()
+            ->with(['members', 'statuses', 'projects' => function ($q) {
+                $q->where('is_archived', false)->with('sprints');
+            }])
+            ->get();
+
         return Inertia::render('my-work/tasks', [
             'tasks' => $tasks,
             'statuses' => $statuses,
+            'spaces' => $spaces,
             'filters' => $request->only(['search', 'status_id', 'priority']),
         ]);
     }

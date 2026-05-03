@@ -60,10 +60,21 @@ export default function Dashboard({ lineup, counts, spaces, recentActivity }: Pa
     const firstName = auth.user.name.split(' ')[0];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSpace, setSelectedSpace] = useState<any>(null);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
 
     const handleCreateTask = (space: any) => {
         setSelectedSpace(space);
+        setSelectedTask(null);
         setIsModalOpen(true);
+    };
+
+    const handleOpenTask = (task: any) => {
+        const fullSpace = spaces.find((s) => s.id === task.space.id);
+        if (fullSpace) {
+            setSelectedSpace(fullSpace);
+            setSelectedTask(task);
+            setIsModalOpen(true);
+        }
     };
 
     return (
@@ -182,6 +193,7 @@ export default function Dashboard({ lineup, counts, spaces, recentActivity }: Pa
                                     lineup.map((task) => (
                                         <div
                                             key={task.id}
+                                            onClick={() => handleOpenTask(task)}
                                             className="group flex items-center justify-between p-4 bg-card border rounded-xl hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
                                         >
                                             <div className="flex items-center gap-4 min-w-0">
@@ -282,14 +294,16 @@ export default function Dashboard({ lineup, counts, spaces, recentActivity }: Pa
             </div>
             {selectedSpace && (
                 <TaskModal
+                    key={selectedTask?.id ?? 'create'}
                     space={selectedSpace}
                     members={selectedSpace.members || []}
                     isOpen={isModalOpen}
                     onClose={() => {
                         setIsModalOpen(false);
                         setSelectedSpace(null);
+                        setSelectedTask(null);
                     }}
-                    task={null}
+                    task={selectedTask}
                     onTaskSelect={() => {}}
                 />
             )}

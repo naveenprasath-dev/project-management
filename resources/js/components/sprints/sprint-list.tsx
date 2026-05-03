@@ -128,6 +128,7 @@ export default function SprintList({ space, project, sprints }: SprintListProps)
             )}
 
             <SprintFormModal
+                key={editingSprint?.id ?? 'create'}
                 isOpen={isCreateModalOpen || !!editingSprint}
                 onClose={() => {
                     setIsCreateModalOpen(false);

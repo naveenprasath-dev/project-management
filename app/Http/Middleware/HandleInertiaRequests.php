@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                 'can_manage' => $request->user() && $request->route('space') instanceof \App\Models\Space
                     ? $request->user()->canManageSpace($request->route('space'))
                     : false,
+                'is_admin' => $request->user()?->isAdmin() ?? false,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

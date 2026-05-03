@@ -13,6 +13,7 @@ export type User = {
 export type Auth = {
     user: User;
     can_manage: boolean;
+    is_admin: boolean;
 };
 
 export type TwoFactorSetupData = {

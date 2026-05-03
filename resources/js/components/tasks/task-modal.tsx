@@ -224,9 +224,6 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                 space_id: space.id,
             });
 
-            if (activeTab === 'activity') {
-                fetchActivities();
-            }
             fetchComments();
 
             // Load sub-tasks: If editing a sub-task, show siblings; otherwise show children
@@ -271,7 +268,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                 setData('space_id', space.id);
             }
         }
-    }, [task, space.id, space.statuses, statuses, activeTab, project]);
+    }, [task, space.id, space.statuses, statuses, project]);
 
     const fetchActivities = async () => {
         if (!task) return;
@@ -487,7 +484,7 @@ export default function TaskModal({ space, members, isOpen, onClose, task, proje
                             {activeTab === 'details' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />}
                         </button>
                         <button
-                            onClick={() => setActiveTab('activity')}
+                            onClick={() => { setActiveTab('activity'); fetchActivities(); }}
                             className={cn(
                                 "py-2.5 px-5 text-sm font-semibold transition-all relative",
                                 activeTab === 'activity' ? "text-primary" : "text-muted-foreground hover:text-foreground"

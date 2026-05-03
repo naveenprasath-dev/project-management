@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { HelpCircle, Book, MessageCircle, Mail, ExternalLink } from 'lucide-react';
+import { HelpCircle, Book, MessageCircle, Mail, ExternalLink, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -49,15 +49,17 @@ export default function Help() {
                             </CardHeader>
                         </Card>
 
-                        <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20">
-                            <CardHeader>
-                                <Mail className="w-8 h-8 text-primary mb-2" />
-                                <CardTitle className="text-lg">Contact Support</CardTitle>
-                                <CardDescription>
-                                    Get help from our team
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                        <a href="mailto:support@taskflow.app" className="block">
+                            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20 h-full">
+                                <CardHeader>
+                                    <Mail className="w-8 h-8 text-primary mb-2" />
+                                    <CardTitle className="text-lg">Contact Support</CardTitle>
+                                    <CardDescription>
+                                        Get help from our team
+                                    </CardDescription>
+                                </CardHeader>
+                            </Card>
+                        </a>
                     </div>
 
                     {/* FAQ Section */}
@@ -118,15 +120,29 @@ export default function Help() {
                                 Our support team is here to assist you
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="flex gap-3">
-                            <Button variant="default">
-                                <Mail className="w-4 h-4 mr-2" />
-                                Contact Support
-                            </Button>
-                            <Button variant="outline">
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                View Full Docs
-                            </Button>
+                        <CardContent className="space-y-4">
+                            <div className="flex flex-col sm:flex-row gap-3 text-sm text-muted-foreground">
+                                <a href="mailto:support@taskflow.app" className="flex items-center gap-2 hover:text-primary transition-colors">
+                                    <Mail className="w-4 h-4 shrink-0" />
+                                    support@taskflow.app
+                                </a>
+                                <a href="tel:+18005550199" className="flex items-center gap-2 hover:text-primary transition-colors">
+                                    <Phone className="w-4 h-4 shrink-0" />
+                                    +1 (800) 555-0199
+                                </a>
+                            </div>
+                            <div className="flex gap-3">
+                                <Button variant="default" asChild>
+                                    <a href="mailto:support@taskflow.app">
+                                        <Mail className="w-4 h-4 mr-2" />
+                                        Contact Support
+                                    </a>
+                                </Button>
+                                <Button variant="outline">
+                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    View Full Docs
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </main>

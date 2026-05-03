@@ -198,8 +198,8 @@ export default function NotificationBell() {
                     )}
                 </div>
                 <div className="p-2 border-t text-center">
-                    <Button variant="ghost" className="w-full text-xs h-8">
-                        View All Activity
+                    <Button variant="ghost" className="w-full text-xs h-8" asChild>
+                        <Link href="/notifications">View All Activity</Link>
                     </Button>
                 </div>
             </DropdownMenuContent>

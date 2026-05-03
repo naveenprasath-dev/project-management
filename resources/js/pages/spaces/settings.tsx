@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Settings as SettingsIcon, ListTodo, Users as UsersIcon, UserPlus, Trash2, FolderPlus, MoreHorizontal, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import ProjectModal from '@/components/projects/project-modal';
@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, SharedData } from '@/types';
 
 interface Space {
     id: number;
@@ -30,6 +30,8 @@ interface Space {
 }
 
 export default function SettingsPage({ space }: { space: Space }) {
+    const { auth } = usePage<SharedData>().props;
+    const isAdmin = auth.is_admin;
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -168,22 +170,24 @@ export default function SettingsPage({ space }: { space: Space }) {
                                     </form>
                                 </section>
 
-                                <section className="p-6 border rounded-xl bg-card shadow-sm border-destructive/50">
-                                    <h2 className="text-lg font-semibold text-destructive mb-2">Danger Zone</h2>
-                                    <p className="text-sm text-muted-foreground mb-4">
-                                        Permanently delete this space and all its data
-                                    </p>
-                                    <Button
-                                        variant="destructive"
-                                        onClick={() => {
-                                            if (confirm('Are you sure? This action cannot be undone.')) {
-                                                router.delete(`/spaces/${space.slug}`);
-                                            }
-                                        }}
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-2" /> Delete Space
-                                    </Button>
-                                </section>
+                                {isAdmin && (
+                                    <section className="p-6 border rounded-xl bg-card shadow-sm border-destructive/50">
+                                        <h2 className="text-lg font-semibold text-destructive mb-2">Danger Zone</h2>
+                                        <p className="text-sm text-muted-foreground mb-4">
+                                            Permanently delete this space and all its data
+                                        </p>
+                                        <Button
+                                            variant="destructive"
+                                            onClick={() => {
+                                                if (confirm('Are you sure? This action cannot be undone.')) {
+                                                    router.delete(`/spaces/${space.slug}`);
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" /> Delete Space
+                                        </Button>
+                                    </section>
+                                )}
                             </div>
                         )}
 

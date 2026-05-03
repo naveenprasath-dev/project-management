@@ -1,8 +1,15 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { Plus, LayoutGrid, Settings } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Plus, LayoutGrid, Settings, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,6 +28,15 @@ interface Space {
 }
 
 export default function Index({ spaces }: { spaces: Space[] }) {
+    const { auth } = usePage<SharedData>().props;
+    const isAdmin = auth.is_admin;
+
+    const handleDelete = (space: Space) => {
+        if (confirm(`Delete "${space.name}"? This action cannot be undone and will remove all associated data.`)) {
+            router.delete(`/spaces/${space.slug}`);
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Spaces" />
@@ -52,11 +68,33 @@ export default function Index({ spaces }: { spaces: Space[] }) {
                                 <div className="p-2 rounded-lg bg-muted">
                                     <LayoutGrid className="w-5 h-5 text-muted-foreground" />
                                 </div>
-                                <Button variant="ghost" size="icon" asChild>
-                                    <Link href={`/spaces/${space.slug}/settings`}>
-                                        <Settings className="w-4 h-4" />
-                                    </Link>
-                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="w-4 h-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem asChild>
+                                            <Link href={`/spaces/${space.slug}/settings`}>
+                                                <Settings className="w-4 h-4 mr-2" />
+                                                Settings
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        {isAdmin && (
+                                            <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    className="text-destructive focus:text-destructive"
+                                                    onClick={() => handleDelete(space)}
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete Space
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                             
                             <h3 className="mb-1 text-lg font-bold">

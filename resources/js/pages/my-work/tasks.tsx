@@ -19,11 +19,13 @@ interface PageProps {
         meta: any;
     };
     statuses: any[];
+    spaces: any[];
     filters: any;
 }
 
-export default function MyTasks({ tasks, statuses, filters }: PageProps) {
+export default function MyTasks({ tasks, statuses, spaces, filters }: PageProps) {
     const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [selectedSpace, setSelectedSpace] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [view, setView] = useState<'list' | 'board'>('list');
     const [localTasks, setLocalTasks] = useState<any[]>(tasks.data);
@@ -39,6 +41,17 @@ export default function MyTasks({ tasks, statuses, filters }: PageProps) {
 
     const handleEditTask = (task: any) => {
         setSelectedTask(task);
+        setSelectedSpace(task.space || spaces[0] || null);
+        setIsModalOpen(true);
+    };
+
+    const handleCreateTask = (statusId?: number) => {
+        const space = statusId
+            ? (spaces.find((s) => s.statuses?.some((st: any) => st.id === statusId)) ?? spaces[0])
+            : spaces[0];
+        if (!space) return;
+        setSelectedTask(null);
+        setSelectedSpace(space);
         setIsModalOpen(true);
     };
 
@@ -282,25 +295,27 @@ export default function MyTasks({ tasks, statuses, filters }: PageProps) {
                                 tasks={localTasks}
                                 statuses={statuses}
                                 onEditTask={handleEditTask}
-                                onCreateTask={() => { }}
+                                onCreateTask={handleCreateTask}
                             />
                         </div>
                     )}
                 </div>
             </div>
 
-            {selectedTask && (
+            {selectedSpace && (
                 <TaskModal
-                    space={selectedTask.space}
-                    members={selectedTask.space?.members || []}
+                    key={selectedTask?.id ?? 'create'}
+                    space={selectedSpace}
+                    members={selectedSpace.members || []}
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedTask(null);
+                        setSelectedSpace(null);
+                    }}
                     task={selectedTask}
-                    statuses={selectedTask.space?.statuses || statuses}
-                    sprints={
-                        // Aggregate sprints from the task's space projects
-                        selectedTask.space?.projects?.flatMap((p: any) => p.sprints || []) || []
-                    }
+                    statuses={selectedSpace.statuses || statuses}
+                    sprints={selectedSpace.projects?.flatMap((p: any) => p.sprints || []) || []}
                 />
             )}
         </AppLayout>
