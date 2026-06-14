@@ -36,12 +36,9 @@ A self-hosted project management application built with Laravel, Inertia.js, and
 # Clone the repository
 git clone https://github.com/naveenprasath-dev/project-management.git
 cd project-management
-
-# Run the setup script (installs dependencies, generates key, runs migrations, builds assets)
-composer run setup
 ```
 
-Then copy `.env.example` to `.env` and configure your database and mail settings:
+Copy `.env.example` to `.env` and configure your database and mail settings:
 
 ```bash
 cp .env.example .env
@@ -76,6 +73,45 @@ Generate Reverb credentials:
 ```bash
 php artisan reverb:install
 ```
+
+Then run the setup script (installs dependencies, generates app key, runs migrations, and builds assets):
+
+```bash
+composer run setup
+```
+
+## Seeding Demo Data
+
+The project ships with a seeder that creates a realistic starting state — useful for exploring the app or understanding the data model before building on top of it.
+
+```bash
+php artisan db:seed
+```
+
+This runs the following seeders in order:
+
+| Seeder | What it creates |
+|---|---|
+| `RoleAndPermissionSeeder` | `admin` and `member` roles with their permissions |
+| `ProjectManagementSeeder` | Demo users, spaces, projects, and tasks |
+
+**What gets created:**
+
+- **3 users** — an admin and two members
+- **2 spaces** — "Product Development" and "Marketing & Growth", each with all three users as members
+- **4 task statuses per space** — To Do, In Progress, Review, Done
+- **2 projects per space** (4 total) — each with all members assigned
+- **5 tasks per project** (20 total) — randomly distributed across statuses, priorities, and assignees
+
+**Demo credentials:**
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@example.com` | `password` |
+| Member | `alice@example.com` | `password` |
+| Member | `bob@example.com` | `password` |
+
+> If you want a fresh start, run `php artisan migrate:fresh --seed` to drop all tables, re-run migrations, and re-seed in one step.
 
 ## Running Locally
 
