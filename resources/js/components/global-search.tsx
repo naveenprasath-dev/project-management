@@ -1,8 +1,14 @@
 import { router } from '@inertiajs/react';
 import axios from 'axios';
-import { Search, CheckCircle2, LayoutGrid, FolderOpen, Loader2 } from 'lucide-react';
-import { useEffect, useRef, useState, useCallback } from 'react';
 import { debounce } from 'lodash';
+import {
+    Search,
+    CheckCircle2,
+    LayoutGrid,
+    FolderOpen,
+    Loader2,
+} from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TaskResult {
@@ -70,7 +76,7 @@ export default function GlobalSearch() {
                 setIsLoading(false);
             }
         }, 300),
-        []
+        [],
     );
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +109,10 @@ export default function GlobalSearch() {
     // Close on outside click
     useEffect(() => {
         const handler = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+            if (
+                containerRef.current &&
+                !containerRef.current.contains(e.target as Node)
+            ) {
                 setIsOpen(false);
             }
         };
@@ -129,8 +138,8 @@ export default function GlobalSearch() {
 
     return (
         <div ref={containerRef} className="relative w-full">
-            <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <div className="group relative">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                 <input
                     ref={inputRef}
                     type="text"
@@ -139,13 +148,13 @@ export default function GlobalSearch() {
                     onKeyDown={handleKeyDown}
                     onFocus={() => query.length >= 2 && setIsOpen(true)}
                     placeholder="Search tasks, spaces, or projects..."
-                    className="w-full h-9 pl-10 pr-16 bg-muted/50 border border-transparent rounded-lg text-sm transition-all focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/10 focus:shadow-sm outline-none"
+                    className="h-9 w-full rounded-lg border border-transparent bg-muted/50 pr-16 pl-10 text-sm transition-all outline-none focus:border-primary focus:bg-background focus:shadow-sm focus:ring-2 focus:ring-primary/10"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <div className="absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1">
                     {isLoading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                     ) : (
-                        <kbd className="px-1.5 py-0.5 rounded border bg-background text-[10px] font-mono text-muted-foreground pointer-events-none">
+                        <kbd className="pointer-events-none rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
                             ⌘K
                         </kbd>
                     )}
@@ -153,46 +162,67 @@ export default function GlobalSearch() {
             </div>
 
             {showDropdown && (
-                <div className="absolute top-full mt-2 left-0 right-0 bg-popover border rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border bg-popover shadow-xl">
                     {isLoading && !results ? (
                         <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin" />
                             Searching...
                         </div>
                     ) : !hasResults ? (
                         <div className="py-6 text-center text-sm text-muted-foreground">
-                            No results for <span className="font-semibold text-foreground">"{query}"</span>
+                            No results for{' '}
+                            <span className="font-semibold text-foreground">
+                                "{query}"
+                            </span>
                         </div>
                     ) : (
-                        <div className="max-h-[420px] overflow-y-auto p-2 space-y-1">
+                        <div className="max-h-[420px] space-y-1 overflow-y-auto p-2">
                             {results.tasks.length > 0 && (
                                 <div>
                                     <div className="flex items-center gap-1.5 px-2 py-1.5">
-                                        <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tasks</span>
+                                        <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
+                                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                            Tasks
+                                        </span>
                                     </div>
                                     {results.tasks.map((task) => (
                                         <button
                                             key={task.id}
-                                            onClick={() => handleNavigate(task.url)}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-left transition-colors group"
+                                            onClick={() =>
+                                                handleNavigate(task.url)
+                                            }
+                                            className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
                                         >
                                             <div
-                                                className="w-2 h-2 rounded-full shrink-0"
-                                                style={{ backgroundColor: task.status?.color ?? '#94a3b8' }}
+                                                className="h-2 w-2 shrink-0 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        task.status?.color ??
+                                                        '#94a3b8',
+                                                }}
                                             />
-                                            <span className="flex-1 text-sm font-medium truncate group-hover:text-accent-foreground">
+                                            <span className="flex-1 truncate text-sm font-medium group-hover:text-accent-foreground">
                                                 {task.title}
                                             </span>
-                                            <div className="flex items-center gap-2 shrink-0">
+                                            <div className="flex shrink-0 items-center gap-2">
                                                 {task.priority && (
-                                                    <span className={cn('text-[10px] font-bold uppercase', PRIORITY_COLORS[task.priority])}>
+                                                    <span
+                                                        className={cn(
+                                                            'text-[10px] font-bold uppercase',
+                                                            PRIORITY_COLORS[
+                                                                task.priority
+                                                            ],
+                                                        )}
+                                                    >
                                                         {task.priority}
                                                     </span>
                                                 )}
                                                 <span
-                                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
-                                                    style={{ backgroundColor: task.space.color }}
+                                                    className="rounded px-1.5 py-0.5 text-[10px] font-bold text-white"
+                                                    style={{
+                                                        backgroundColor:
+                                                            task.space.color,
+                                                    }}
                                                 >
                                                     {task.space.name}
                                                 </span>
@@ -204,23 +234,32 @@ export default function GlobalSearch() {
 
                             {results.spaces.length > 0 && (
                                 <div>
-                                    <div className="flex items-center gap-1.5 px-2 py-1.5 mt-1">
-                                        <LayoutGrid className="w-3 h-3 text-muted-foreground" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Spaces</span>
+                                    <div className="mt-1 flex items-center gap-1.5 px-2 py-1.5">
+                                        <LayoutGrid className="h-3 w-3 text-muted-foreground" />
+                                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                            Spaces
+                                        </span>
                                     </div>
                                     {results.spaces.map((space) => (
                                         <button
                                             key={space.id}
-                                            onClick={() => handleNavigate(space.url)}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-left transition-colors"
+                                            onClick={() =>
+                                                handleNavigate(space.url)
+                                            }
+                                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
                                         >
                                             <div
-                                                className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                                                style={{ backgroundColor: space.color }}
+                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                                                style={{
+                                                    backgroundColor:
+                                                        space.color,
+                                                }}
                                             >
                                                 {space.name.charAt(0)}
                                             </div>
-                                            <span className="text-sm font-medium">{space.name}</span>
+                                            <span className="text-sm font-medium">
+                                                {space.name}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
@@ -228,24 +267,35 @@ export default function GlobalSearch() {
 
                             {results.projects.length > 0 && (
                                 <div>
-                                    <div className="flex items-center gap-1.5 px-2 py-1.5 mt-1">
-                                        <FolderOpen className="w-3 h-3 text-muted-foreground" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Projects</span>
+                                    <div className="mt-1 flex items-center gap-1.5 px-2 py-1.5">
+                                        <FolderOpen className="h-3 w-3 text-muted-foreground" />
+                                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                            Projects
+                                        </span>
                                     </div>
                                     {results.projects.map((project) => (
                                         <button
                                             key={project.id}
-                                            onClick={() => handleNavigate(project.url)}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-left transition-colors"
+                                            onClick={() =>
+                                                handleNavigate(project.url)
+                                            }
+                                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
                                         >
                                             <div
-                                                className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                                                style={{ backgroundColor: project.color }}
+                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                                                style={{
+                                                    backgroundColor:
+                                                        project.color,
+                                                }}
                                             >
                                                 {project.name.charAt(0)}
                                             </div>
-                                            <span className="flex-1 text-sm font-medium truncate">{project.name}</span>
-                                            <span className="text-[10px] text-muted-foreground shrink-0">{project.space_name}</span>
+                                            <span className="flex-1 truncate text-sm font-medium">
+                                                {project.name}
+                                            </span>
+                                            <span className="shrink-0 text-[10px] text-muted-foreground">
+                                                {project.space_name}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>

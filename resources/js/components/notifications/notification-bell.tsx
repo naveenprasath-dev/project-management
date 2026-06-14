@@ -24,7 +24,7 @@ interface NotificationData {
 }
 
 export default function NotificationBell() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<{ auth: { user: { id: number } } }>().props;
     const [notifications, setNotifications] = useState<NotificationData[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -39,16 +39,19 @@ export default function NotificationBell() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchNotifications();
+         
         fetchUnreadCount();
 
         if (!window.Echo) return;
 
-        window.Echo.private(`App.Models.User.${auth.user.id}`)
-            .notification((notification: any) => {
-                setNotifications(prev => [notification, ...prev]);
-                setUnreadCount(prev => prev + 1);
-            });
+        window.Echo.private(`App.Models.User.${auth.user.id}`).notification(
+            (notification: NotificationData) => {
+                setNotifications((prev) => [notification, ...prev]);
+                setUnreadCount((prev) => prev + 1);
+            },
+        );
 
         return () => {
             window.Echo.leave(`App.Models.User.${auth.user.id}`);
@@ -57,25 +60,29 @@ export default function NotificationBell() {
 
     const markAsRead = async (id: string) => {
         await axios.patch(`/notifications/${id}/read`);
-        setNotifications(prev =>
-            prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n)
+        setNotifications((prev) =>
+            prev.map((n) =>
+                n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
+            ),
         );
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount((prev) => Math.max(0, prev - 1));
     };
 
     const markAllAsRead = async () => {
         await axios.post('/notifications/read-all');
-        setNotifications(prev => prev.map(n => ({ ...n, read_at: new Date().toISOString() })));
+        setNotifications((prev) =>
+            prev.map((n) => ({ ...n, read_at: new Date().toISOString() })),
+        );
         setUnreadCount(0);
     };
 
     const dismiss = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        const target = notifications.find(n => n.id === id);
+        const target = notifications.find((n) => n.id === id);
         await axios.delete(`/notifications/${id}`);
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
         if (target && !target.read_at) {
-            setUnreadCount(prev => Math.max(0, prev - 1));
+            setUnreadCount((prev) => Math.max(0, prev - 1));
         }
     };
 
@@ -89,14 +96,18 @@ export default function NotificationBell() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative h-9 w-9"
+                >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <>
-                            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive animate-ping opacity-40" />
+                            <span className="absolute -top-1 -right-1 h-5 w-5 animate-ping rounded-full bg-destructive opacity-40" />
                             <Badge
                                 variant="destructive"
-                                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+                                className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center p-0 text-[10px]"
                             >
                                 {unreadCount > 9 ? '9+' : unreadCount}
                             </Badge>
@@ -105,8 +116,8 @@ export default function NotificationBell() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-80 p-0" align="end">
-                <div className="flex items-center justify-between p-4 border-b">
-                    <h4 className="font-semibold text-sm">Notifications</h4>
+                <div className="flex items-center justify-between border-b p-4">
+                    <h4 className="text-sm font-semibold">Notifications</h4>
                     <div className="flex items-center gap-1">
                         {unreadCount > 0 && (
                             <Button
@@ -116,7 +127,7 @@ export default function NotificationBell() {
                                     e.stopPropagation();
                                     markAllAsRead();
                                 }}
-                                className="text-xs h-8 px-2"
+                                className="h-8 px-2 text-xs"
                             >
                                 Mark all read
                             </Button>
@@ -126,9 +137,9 @@ export default function NotificationBell() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={clearAll}
-                                className="text-xs h-8 px-2 text-muted-foreground hover:text-destructive"
+                                className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
                             >
-                                <Trash2 className="h-3 w-3 mr-1" />
+                                <Trash2 className="mr-1 h-3 w-3" />
                                 Clear all
                             </Button>
                         )}
@@ -137,7 +148,7 @@ export default function NotificationBell() {
                 <div className="max-h-[400px] overflow-y-auto">
                     {notifications.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                            <Bell className="mx-auto mb-2 h-8 w-8 opacity-20" />
                             <p className="text-xs">No notifications yet</p>
                         </div>
                     ) : (
@@ -145,29 +156,35 @@ export default function NotificationBell() {
                             {notifications.map((n) => (
                                 <div
                                     key={n.id}
-                                    className={`p-4 border-b last:border-0 hover:bg-muted/50 transition-colors group relative ${!n.read_at ? 'bg-primary/5 shadow-sm' : ''}`}
+                                    className={`group relative border-b p-4 transition-colors last:border-0 hover:bg-muted/50 ${!n.read_at ? 'bg-primary/5 shadow-sm' : ''}`}
                                 >
-                                    <div className="flex justify-between gap-2 mb-1">
-                                        <p className="font-bold text-xs">{n.data.title}</p>
-                                        <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                            {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                                    <div className="mb-1 flex justify-between gap-2">
+                                        <p className="text-xs font-bold">
+                                            {n.data.title}
+                                        </p>
+                                        <p className="text-[10px] whitespace-nowrap text-muted-foreground">
+                                            {formatDistanceToNow(
+                                                new Date(n.created_at),
+                                                { addSuffix: true },
+                                            )}
                                         </p>
                                     </div>
-                                    <p className="text-xs text-muted-foreground line-clamp-2 pr-6">
+                                    <p className="line-clamp-2 pr-6 text-xs text-muted-foreground">
                                         {n.data.body}
                                     </p>
 
                                     <div className="mt-2 flex items-center gap-2">
                                         <Link
                                             href={n.data.url}
-                                            className="text-[10px] font-medium text-primary hover:underline flex items-center gap-1"
+                                            className="flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
                                             onClick={() => markAsRead(n.id)}
                                         >
-                                            View details <ExternalLink className="h-2 w-2" />
+                                            View details{' '}
+                                            <ExternalLink className="h-2 w-2" />
                                         </Link>
                                     </div>
 
-                                    <div className="absolute right-2 bottom-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute right-2 bottom-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                         {!n.read_at && (
                                             <Button
                                                 variant="ghost"
@@ -197,8 +214,12 @@ export default function NotificationBell() {
                         </div>
                     )}
                 </div>
-                <div className="p-2 border-t text-center">
-                    <Button variant="ghost" className="w-full text-xs h-8" asChild>
+                <div className="border-t p-2 text-center">
+                    <Button
+                        variant="ghost"
+                        className="h-8 w-full text-xs"
+                        asChild
+                    >
                         <Link href="/notifications">View All Activity</Link>
                     </Button>
                 </div>

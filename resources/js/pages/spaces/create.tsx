@@ -15,8 +15,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const COLORS = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-    '#ec4899', '#06b6d4', '#475569', '#111827'
+    '#3b82f6',
+    '#ef4444',
+    '#10b981',
+    '#f59e0b',
+    '#8b5cf6',
+    '#ec4899',
+    '#06b6d4',
+    '#475569',
+    '#111827',
 ];
 
 export default function Create() {
@@ -36,14 +43,18 @@ export default function Create() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Space" />
 
-            <div className="max-w-2xl px-6 py-8 mx-auto">
-                <div className="flex items-center mb-8 gap-x-4">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
-                        <LayoutGrid className="w-6 h-6 text-primary" />
+            <div className="mx-auto max-w-2xl px-6 py-8">
+                <div className="mb-8 flex items-center gap-x-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                        <LayoutGrid className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold">Create a new Space</h1>
-                        <p className="text-sm text-muted-foreground">Spaces help you organize your team and workflows.</p>
+                        <h1 className="text-2xl font-bold">
+                            Create a new Space
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Spaces help you organize your team and workflows.
+                        </p>
                     </div>
                 </div>
 
@@ -54,24 +65,40 @@ export default function Create() {
                             <Input
                                 id="name"
                                 value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
+                                onChange={(e) =>
+                                    setData('name', e.target.value)
+                                }
                                 placeholder="e.g. Engineering, Marketing..."
-                                className={errors.name ? 'border-destructive' : ''}
+                                className={
+                                    errors.name ? 'border-destructive' : ''
+                                }
                                 autoFocus
                             />
-                            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                            {errors.name && (
+                                <p className="text-sm text-destructive">
+                                    {errors.name}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="description">Description (Optional)</Label>
+                            <Label htmlFor="description">
+                                Description (Optional)
+                            </Label>
                             <Textarea
                                 id="description"
                                 value={data.description}
-                                onChange={(e) => setData('description', e.target.value)}
+                                onChange={(e) =>
+                                    setData('description', e.target.value)
+                                }
                                 placeholder="What's this space for?"
                                 rows={3}
                             />
-                            {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                            {errors.description && (
+                                <p className="text-sm text-destructive">
+                                    {errors.description}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid gap-4">
@@ -82,37 +109,48 @@ export default function Create() {
                                         key={color}
                                         type="button"
                                         onClick={() => setData('color', color)}
-                                        className={`w-8 h-8 rounded-full border-2 transition-all ${data.color === color ? 'border-primary scale-110 shadow-sm' : 'border-transparent hover:scale-105'
-                                            }`}
+                                        className={`h-8 w-8 rounded-full border-2 transition-all ${
+                                            data.color === color
+                                                ? 'scale-110 border-primary shadow-sm'
+                                                : 'border-transparent hover:scale-105'
+                                        }`}
                                         style={{ backgroundColor: color }}
                                     />
                                 ))}
                             </div>
                         </div>
 
-                        <div className="flex items-start p-4 border rounded-lg gap-x-3 bg-muted/30">
+                        <div className="flex items-start gap-x-3 rounded-lg border bg-muted/30 p-4">
                             <Checkbox
                                 id="is_private"
                                 checked={data.is_private}
-                                onCheckedChange={(checked) => setData('is_private', !!checked)}
+                                onCheckedChange={(checked) =>
+                                    setData('is_private', !!checked)
+                                }
                             />
                             <div className="grid gap-1 leading-none">
-                                <Label htmlFor="is_private" className="cursor-pointer">Private Space</Label>
+                                <Label
+                                    htmlFor="is_private"
+                                    className="cursor-pointer"
+                                >
+                                    Private Space
+                                </Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Only invited members can view this space and its tasks.
+                                    Only invited members can view this space and
+                                    its tasks.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-end pt-6 border-t gap-x-3">
+                    <div className="flex items-center justify-end gap-x-3 border-t pt-6">
                         <Button variant="ghost" asChild>
                             <Link href="/spaces">
-                                <X className="w-4 h-4 mr-2" /> Cancel
+                                <X className="mr-2 h-4 w-4" /> Cancel
                             </Link>
                         </Button>
                         <Button type="submit" disabled={processing}>
-                            <Save className="w-4 h-4 mr-2" />
+                            <Save className="mr-2 h-4 w-4" />
                             {processing ? 'Creating...' : 'Create Space'}
                         </Button>
                     </div>

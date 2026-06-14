@@ -1,7 +1,17 @@
 import { router } from '@inertiajs/react';
 import { debounce } from 'lodash';
-import { Search, Filter, X, Star, Bug, TrendingUp, CheckCircle2, Search as SearchIcon, Settings, ShieldCheck } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import {
+    Search,
+    X,
+    Star,
+    Bug,
+    TrendingUp,
+    CheckCircle2,
+    Search as SearchIcon,
+    Settings,
+    ShieldCheck,
+} from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -27,13 +37,13 @@ export default function TaskFilterBar({
     currentFilters,
     baseUrl,
     statuses,
-    hideProjectFilter = false
+    hideProjectFilter = false,
 }: {
-    space: any;
-    members: any[];
+    space: { slug: string; statuses?: { id: number; name: string }[]; projects?: { id: number; name: string }[] };
+    members: { id: number; name: string }[];
     currentFilters: Filters;
     baseUrl?: string;
-    statuses?: any[];
+    statuses?: { id: number; name: string }[];
     hideProjectFilter?: boolean;
 }) {
     const [search, setSearch] = useState(currentFilters.search || '');
@@ -41,15 +51,17 @@ export default function TaskFilterBar({
     const statusOptions = statuses || space.statuses || [];
     const projectOptions = space.projects || [];
 
-    const updateFilters = useCallback(
-        debounce((newFilters: Partial<Filters>) => {
-            router.get(
-                baseUrl || `/spaces/${space.slug}/tasks`,
-                { ...currentFilters, ...newFilters },
-                { preserveState: true, preserveScroll: true, replace: true }
-            );
-        }, 300),
-        [space.slug, currentFilters, baseUrl]
+    const updateFilters = useMemo(
+        () =>
+            debounce((newFilters: Partial<Filters>) => {
+                router.get(
+                    baseUrl || `/spaces/${space.slug}/tasks`,
+                    { ...currentFilters, ...newFilters },
+                    { preserveState: true, preserveScroll: true, replace: true },
+                );
+            }, 300),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [space.slug, JSON.stringify(currentFilters), baseUrl],
     );
 
     const handleSearchChange = (value: string) => {
@@ -59,15 +71,19 @@ export default function TaskFilterBar({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(baseUrl || `/spaces/${space.slug}/tasks`, {}, { preserveState: true, replace: true });
+        router.get(
+            baseUrl || `/spaces/${space.slug}/tasks`,
+            {},
+            { preserveState: true, replace: true },
+        );
     };
 
-    const hasFilters = Object.values(currentFilters).some(v => !!v);
+    const hasFilters = Object.values(currentFilters).some((v) => !!v);
 
     return (
-        <div className="flex flex-col gap-4 p-4 border-b bg-muted/20 md:flex-row md:items-center">
-            <div className="relative flex-1 max-w-sm">
-                <Search className="absolute w-4 h-4 left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex flex-col gap-4 border-b bg-muted/20 p-4 md:flex-row md:items-center">
+            <div className="relative max-w-sm flex-1">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                     placeholder="Search tasks..."
                     value={search}
@@ -80,16 +96,25 @@ export default function TaskFilterBar({
                 {!hideProjectFilter && projectOptions.length > 0 && (
                     <Select
                         value={currentFilters.project_id || 'all'}
-                        onValueChange={(v) => updateFilters({ project_id: v === 'all' ? undefined : v })}
+                        onValueChange={(v) =>
+                            updateFilters({
+                                project_id: v === 'all' ? undefined : v,
+                            })
+                        }
                     >
-                        <SelectTrigger className="w-[180px] h-9">
+                        <SelectTrigger className="h-9 w-[180px]">
                             <SelectValue placeholder="Project" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Projects</SelectItem>
-                            {projectOptions.map((project: any) => (
-                                <SelectItem key={project.id} value={project.id.toString()}>
-                                    <span className="truncate max-w-[150px] inline-block">{project.name}</span>
+                            {projectOptions.map((project) => (
+                                <SelectItem
+                                    key={project.id}
+                                    value={project.id.toString()}
+                                >
+                                    <span className="inline-block max-w-[150px] truncate">
+                                        {project.name}
+                                    </span>
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -98,15 +123,22 @@ export default function TaskFilterBar({
 
                 <Select
                     value={currentFilters.status_id || 'all'}
-                    onValueChange={(v) => updateFilters({ status_id: v === 'all' ? undefined : v })}
+                    onValueChange={(v) =>
+                        updateFilters({
+                            status_id: v === 'all' ? undefined : v,
+                        })
+                    }
                 >
-                    <SelectTrigger className="w-[140px] h-9">
+                    <SelectTrigger className="h-9 w-[140px]">
                         <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
-                        {statusOptions.map((status: any) => (
-                            <SelectItem key={status.id} value={status.id.toString()}>
+                        {statusOptions.map((status) => (
+                            <SelectItem
+                                key={status.id}
+                                value={status.id.toString()}
+                            >
                                 {status.name}
                             </SelectItem>
                         ))}
@@ -115,9 +147,11 @@ export default function TaskFilterBar({
 
                 <Select
                     value={currentFilters.priority || 'all'}
-                    onValueChange={(v) => updateFilters({ priority: v === 'all' ? undefined : v })}
+                    onValueChange={(v) =>
+                        updateFilters({ priority: v === 'all' ? undefined : v })
+                    }
                 >
-                    <SelectTrigger className="w-[140px] h-9">
+                    <SelectTrigger className="h-9 w-[140px]">
                         <SelectValue placeholder="Priority" />
                     </SelectTrigger>
                     <SelectContent>
@@ -131,15 +165,22 @@ export default function TaskFilterBar({
 
                 <Select
                     value={currentFilters.assigned_to || 'all'}
-                    onValueChange={(v) => updateFilters({ assigned_to: v === 'all' ? undefined : v })}
+                    onValueChange={(v) =>
+                        updateFilters({
+                            assigned_to: v === 'all' ? undefined : v,
+                        })
+                    }
                 >
-                    <SelectTrigger className="w-[140px] h-9">
+                    <SelectTrigger className="h-9 w-[140px]">
                         <SelectValue placeholder="Assignee" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Anyone</SelectItem>
                         {members.map((member) => (
-                            <SelectItem key={member.id} value={member.id.toString()}>
+                            <SelectItem
+                                key={member.id}
+                                value={member.id.toString()}
+                            >
                                 {member.name}
                             </SelectItem>
                         ))}
@@ -148,54 +189,68 @@ export default function TaskFilterBar({
 
                 <Select
                     value={currentFilters.type || 'all'}
-                    onValueChange={(v) => updateFilters({ type: v === 'all' ? undefined : v })}
+                    onValueChange={(v) =>
+                        updateFilters({ type: v === 'all' ? undefined : v })
+                    }
                 >
-                    <SelectTrigger className="w-[140px] h-9">
+                    <SelectTrigger className="h-9 w-[140px]">
                         <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="feature">
                             <div className="flex items-center gap-2">
-                                <Star className="w-3.5 h-3.5 text-emerald-500" /> Feature
+                                <Star className="h-3.5 w-3.5 text-emerald-500" />{' '}
+                                Feature
                             </div>
                         </SelectItem>
                         <SelectItem value="bug">
                             <div className="flex items-center gap-2">
-                                <Bug className="w-3.5 h-3.5 text-rose-500" /> Bug
+                                <Bug className="h-3.5 w-3.5 text-rose-500" />{' '}
+                                Bug
                             </div>
                         </SelectItem>
                         <SelectItem value="improvement">
                             <div className="flex items-center gap-2">
-                                <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Improvement
+                                <TrendingUp className="h-3.5 w-3.5 text-blue-500" />{' '}
+                                Improvement
                             </div>
                         </SelectItem>
                         <SelectItem value="task">
                             <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" /> Task
+                                <CheckCircle2 className="h-3.5 w-3.5 text-slate-500" />{' '}
+                                Task
                             </div>
                         </SelectItem>
                         <SelectItem value="research">
                             <div className="flex items-center gap-2">
-                                <SearchIcon className="w-3.5 h-3.5 text-purple-500" /> Research
+                                <SearchIcon className="h-3.5 w-3.5 text-purple-500" />{' '}
+                                Research
                             </div>
                         </SelectItem>
                         <SelectItem value="maintenance">
                             <div className="flex items-center gap-2">
-                                <Settings className="w-3.5 h-3.5 text-amber-500" /> Maintenance
+                                <Settings className="h-3.5 w-3.5 text-amber-500" />{' '}
+                                Maintenance
                             </div>
                         </SelectItem>
                         <SelectItem value="security">
                             <div className="flex items-center gap-2">
-                                <ShieldCheck className="w-3.5 h-3.5 text-red-700" /> Security
+                                <ShieldCheck className="h-3.5 w-3.5 text-red-700" />{' '}
+                                Security
                             </div>
                         </SelectItem>
                     </SelectContent>
                 </Select>
 
                 {hasFilters && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
-                        <X className="w-4 h-4 mr-2" /> Clear
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="h-9"
+                    >
+                        <X className="mr-2 h-4 w-4" /> Clear
                     </Button>
                 )}
             </div>

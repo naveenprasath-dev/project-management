@@ -4,7 +4,8 @@
  */
 export const playMovementSound = () => {
     try {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContextClass =
+            window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
         if (!AudioContextClass) return;
 
         const ctx = new AudioContextClass();

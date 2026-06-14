@@ -2,8 +2,8 @@ import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { debounce } from 'lodash';
-import { Send, Hash, User, MessageCircle, MoreHorizontal } from 'lucide-react';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, MessageCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -58,31 +58,35 @@ interface Message {
     };
 }
 
+type OnlineUser = { id: number; name: string };
+
 interface ChatWindowProps {
     spaceId?: number;
     taskId?: number;
-    members: any[];
+    members: { id: number; name: string }[];
 }
 
-export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps) {
-    const { auth } = usePage<{ auth: any }>().props;
+export default function ChatWindow({
+    spaceId,
+    taskId,
+    members,
+}: ChatWindowProps) {
+    const { auth } = usePage<{ auth: { user: { id: number; name: string } } }>().props;
     const currentUser = auth.user;
     const [messages, setMessages] = useState<Message[]>([]);
     const [content, setContent] = useState('');
-    const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
-    const [typingUsers, setTypingUsers] = useState<any[]>([]);
+    const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+    const [typingUsers, setTypingUsers] = useState<OnlineUser[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [isLoading, setIsLoading] = useState(false);
 
     const channelName = taskId ? `task.${taskId}` : `space.${spaceId}`;
 
     // Fetch initial messages
     useEffect(() => {
-        setIsLoading(true);
-        axios.get('/chat', { params: { space_id: spaceId, task_id: taskId } })
-            .then(res => {
+        axios
+            .get('/chat', { params: { space_id: spaceId, task_id: taskId } })
+            .then((res) => {
                 setMessages(res.data.data.reverse());
-                setIsLoading(false);
             });
     }, [spaceId, taskId]);
 
@@ -90,18 +94,22 @@ export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps
     useEffect(() => {
         if (!window.Echo) return;
 
-        const channel = window.Echo.join(channelName)
-            .here((users: any[]) => setOnlineUsers(users))
-            .joining((user: any) => setOnlineUsers(prev => [...prev, user]))
-            .leaving((user: any) => setOnlineUsers(prev => prev.filter(u => u.id !== user.id)))
-            .listen('.message.sent', (e: any) => {
-                setMessages(prev => [...prev, e.message]);
+        window.Echo.join(channelName)
+            .here((users: OnlineUser[]) => setOnlineUsers(users))
+            .joining((user: OnlineUser) => setOnlineUsers((prev) => [...prev, user]))
+            .leaving((user: OnlineUser) =>
+                setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id)),
+            )
+            .listen('.message.sent', (e: { message: Message }) => {
+                setMessages((prev) => [...prev, e.message]);
             })
-            .listen('.user.typing', (e: any) => {
-                if (!typingUsers.find(u => u.id === e.user.id)) {
-                    setTypingUsers(prev => [...prev, e.user]);
+            .listen('.user.typing', (e: { user: OnlineUser }) => {
+                if (!typingUsers.find((u) => u.id === e.user.id)) {
+                    setTypingUsers((prev) => [...prev, e.user]);
                     setTimeout(() => {
-                        setTypingUsers(prev => prev.filter(u => u.id !== e.user.id));
+                        setTypingUsers((prev) =>
+                            prev.filter((u) => u.id !== e.user.id),
+                        );
                     }, 3000);
                 }
             });
@@ -118,14 +126,14 @@ export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps
         }
     }, [messages]);
 
-    const broadcastTyping = useCallback(
-        debounce(() => {
+    const broadcastTyping = useMemo(
+        () => debounce(() => {
             axios.post('/chat/typing', {
                 target_id: taskId || spaceId,
-                type: taskId ? 'task' : 'space'
+                type: taskId ? 'task' : 'space',
             });
         }, 500),
-        [spaceId, taskId]
+        [spaceId, taskId],
     );
 
     const handleSendMessage = (e: React.FormEvent) => {
@@ -135,33 +143,39 @@ export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps
         const originalContent = content;
         setContent('');
 
-        axios.post('/chat', {
-            content: originalContent,
-            space_id: spaceId,
-            task_id: taskId
-        }).then(res => {
-            setMessages(prev => [...prev, res.data]);
-        });
+        axios
+            .post('/chat', {
+                content: originalContent,
+                space_id: spaceId,
+                task_id: taskId,
+            })
+            .then((res) => {
+                setMessages((prev) => [...prev, res.data]);
+            });
     };
 
     return (
-        <div className="flex flex-col h-full bg-background border-l w-80 shrink-0">
+        <div className="flex h-full w-80 shrink-0 flex-col border-l bg-background">
             {/* Header */}
-            <header className="p-4 border-b flex items-center justify-between">
+            <header className="flex items-center justify-between border-b p-4">
                 <div className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold text-sm">
+                    <MessageCircle className="h-5 w-5 text-primary" />
+                    <h3 className="text-sm font-semibold">
                         {taskId ? 'Task Chat' : 'Space Chat'}
                     </h3>
                 </div>
                 <div className="flex -space-x-1">
-                    {onlineUsers.slice(0, 3).map(user => (
-                        <div key={user.id} title={user.name} className="w-6 h-6 rounded-full border-2 border-background bg-primary/20 flex items-center justify-center text-[10px] font-bold">
+                    {onlineUsers.slice(0, 3).map((user) => (
+                        <div
+                            key={user.id}
+                            title={user.name}
+                            className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary/20 text-[10px] font-bold"
+                        >
                             {user.name.charAt(0)}
                         </div>
                     ))}
                     {onlineUsers.length > 3 && (
-                        <div className="w-6 h-6 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[8px] font-bold">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[8px] font-bold">
                             +{onlineUsers.length - 3}
                         </div>
                     )}
@@ -169,23 +183,35 @@ export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps
             </header>
 
             {/* Message List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
-                {messages.map((msg, i) => {
+            <div
+                className="flex-1 space-y-4 overflow-y-auto scroll-smooth p-4"
+                ref={scrollRef}
+            >
+                {messages.map((msg) => {
                     const isCurrentUser = msg.user.id === currentUser.id;
                     return (
-                        <div key={msg.id} className={`flex flex-col gap-1 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                            <div className={`flex items-baseline gap-2 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                                <span className="text-xs font-bold">{isCurrentUser ? 'You' : msg.user.name}</span>
+                        <div
+                            key={msg.id}
+                            className={`flex flex-col gap-1 ${isCurrentUser ? 'items-end' : 'items-start'}`}
+                        >
+                            <div
+                                className={`flex items-baseline gap-2 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}
+                            >
+                                <span className="text-xs font-bold">
+                                    {isCurrentUser ? 'You' : msg.user.name}
+                                </span>
                                 <span className="text-[10px] text-muted-foreground">
                                     {format(new Date(msg.created_at), 'HH:mm')}
                                 </span>
                             </div>
-                            <div className={cn(
-                                "text-sm p-3 rounded-2xl max-w-[90%] break-words",
-                                isCurrentUser
-                                    ? "bg-primary text-primary-foreground rounded-tr-none"
-                                    : "bg-muted rounded-tl-none"
-                            )}>
+                            <div
+                                className={cn(
+                                    'max-w-[90%] rounded-2xl p-3 text-sm break-words',
+                                    isCurrentUser
+                                        ? 'rounded-tr-none bg-primary text-primary-foreground'
+                                        : 'rounded-tl-none bg-muted',
+                                )}
+                            >
                                 {msg.content}
                             </div>
                         </div>
@@ -193,19 +219,20 @@ export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps
                 })}
 
                 {typingUsers.length > 0 && (
-                    <div className="text-[10px] text-muted-foreground animate-pulse flex items-center gap-1">
+                    <div className="flex animate-pulse items-center gap-1 text-[10px] text-muted-foreground">
                         <div className="flex gap-0.5">
-                            <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" />
-                            <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.2s]" />
-                            <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.4s]" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground [animation-delay:0.2s]" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground [animation-delay:0.4s]" />
                         </div>
-                        {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                        {typingUsers.map((u) => u.name).join(', ')}{' '}
+                        {typingUsers.length === 1 ? 'is' : 'are'} typing...
                     </div>
                 )}
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t bg-muted/20">
+            <div className="border-t bg-muted/20 p-4">
                 <form onSubmit={handleSendMessage} className="space-y-2">
                     <div className="flex gap-2">
                         <div className="flex-1">
@@ -226,17 +253,24 @@ export default function ChatWindow({ spaceId, taskId, members }: ChatWindowProps
                             >
                                 <Mention
                                     trigger="@"
-                                    data={members.map(m => ({ id: m.id, display: m.name }))}
+                                    data={members.map((m) => ({
+                                        id: m.id,
+                                        display: m.name,
+                                    }))}
                                     markup="@[__display__](__id__)"
-                                    className="text-primary font-bold"
+                                    className="font-bold text-primary"
                                 />
                             </MentionsInput>
                         </div>
-                        <Button type="submit" size="icon" className="shrink-0 h-10 w-10">
-                            <Send className="w-4 h-4" />
+                        <Button
+                            type="submit"
+                            size="icon"
+                            className="h-10 w-10 shrink-0"
+                        >
+                            <Send className="h-4 w-4" />
                         </Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground px-1">
+                    <p className="px-1 text-[10px] text-muted-foreground">
                         Use @ to mention teammates
                     </p>
                 </form>

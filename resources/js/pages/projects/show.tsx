@@ -1,7 +1,4 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import type {
-    User
-} from 'lucide-react';
 import {
     ArrowLeft,
     Settings,
@@ -15,15 +12,15 @@ import {
     List,
     Archive,
     FolderPlus,
-    Check
+    Check,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ProjectMemberModal from '@/components/projects/project-member-modal';
+import SprintList from '@/components/sprints/sprint-list';
 import BoardView from '@/components/tasks/board-view';
 import TaskFilterBar from '@/components/tasks/task-filter-bar';
 import TaskModal from '@/components/tasks/task-modal';
 import TasksList from '@/components/tasks/tasks-list';
-import SprintList from '@/components/sprints/sprint-list';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -36,7 +33,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, Task as GlobalTask, TaskStatus } from '@/types';
 
 interface User {
     id: number;
@@ -50,19 +47,7 @@ interface ProjectMember {
     role: string;
 }
 
-interface Task {
-    id: number;
-    title: string;
-    description?: string;
-    status?: any;
-    status_id: number;
-    assignees?: any[];
-    due_date?: string;
-    priority?: string;
-    type: string;
-    sprint_id?: number | null;
-    [key: string]: any;
-}
+type Task = GlobalTask;
 
 interface Project {
     id: number;
@@ -74,56 +59,73 @@ interface Project {
     members: ProjectMember[];
     tasks: Task[];
     tasks_count?: number;
-    statuses?: any[];
-    sprints?: any[];
+    statuses?: TaskStatus[];
+    sprints?: { id: number; name: string; status?: string }[];
 }
 
 interface Space {
     id: number;
     name: string;
     slug: string;
-    statuses: any[];
-    members: any[];
+    statuses: (TaskStatus & { project_id?: number })[];
+    members: { id: number; name: string; email: string }[];
+    projects?: { id: number; slug: string; name: string }[];
 }
 
 interface ShowProps {
     space: Space;
     project: Project;
-    filters: any;
-    sprints: any[];
+    filters: Record<string, string | undefined>;
+    sprints: { id: number; name: string; status?: string }[];
     can: {
         manageMembers: boolean;
     };
 }
 
 export default function Show({ space, project, filters, can }: ShowProps) {
-    const [activeTab, setActiveTab] = useState<'tasks' | 'sprints' | 'members' | 'settings'>('tasks');
+    const [activeTab, setActiveTab] = useState<
+        'tasks' | 'sprints' | 'members' | 'settings'
+    >('tasks');
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
     const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [memberViewEnabled, setMemberViewEnabled] = useState(false);
-    const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+    const [selectedMemberId, setSelectedMemberId] = useState<number | null>(
+        null,
+    );
 
     useEffect(() => {
         if (selectedTask) {
-            const updatedTask = project.tasks?.find((t: any) => t.id === selectedTask.id);
+            const updatedTask = project.tasks?.find(
+                (t) => t.id === selectedTask.id,
+            );
             if (updatedTask) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setSelectedTask(updatedTask);
             }
         }
     }, [project.tasks]);
 
     // Determine effective statuses (project override vs space default)
-    const globalStatuses = space.statuses ? space.statuses.filter((s: any) => !s.project_id) : [];
+    const globalStatuses = space.statuses
+        ? space.statuses.filter((s) => !s.project_id)
+        : [];
     const projectStatuses = project.statuses || [];
-    const effectiveStatuses = projectStatuses.length > 0 ? projectStatuses : globalStatuses;
+    const effectiveStatuses =
+        projectStatuses.length > 0 ? projectStatuses : globalStatuses;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Spaces', href: '/spaces' },
         { title: space.name, href: `/spaces/${space.slug}` },
-        { title: 'Projects', href: `/spaces/${space.slug}/settings?tab=projects` },
-        { title: project.name, href: `/spaces/${space.slug}/projects/${project.slug}` },
+        {
+            title: 'Projects',
+            href: `/spaces/${space.slug}/settings?tab=projects`,
+        },
+        {
+            title: project.name,
+            href: `/spaces/${space.slug}/projects/${project.slug}`,
+        },
     ];
 
     const getInitials = (name: string) => {
@@ -149,48 +151,83 @@ export default function Show({ space, project, filters, can }: ShowProps) {
     };
 
     const tabs = [
-        { id: 'tasks', label: 'Tasks', icon: ListTodo, count: project.tasks?.length || 0 },
-        { id: 'sprints', label: 'Sprints', icon: LayoutGrid, count: project.sprints?.length || 0 },
-        { id: 'members', label: 'Members', icon: Users, count: project.members?.length || 0 },
+        {
+            id: 'tasks',
+            label: 'Tasks',
+            icon: ListTodo,
+            count: project.tasks?.length || 0,
+        },
+        {
+            id: 'sprints',
+            label: 'Sprints',
+            icon: LayoutGrid,
+            count: project.sprints?.length || 0,
+        },
+        {
+            id: 'members',
+            label: 'Members',
+            icon: Users,
+            count: project.members?.length || 0,
+        },
         { id: 'settings', label: 'Settings', icon: Settings },
-        { id: 'archive', label: 'Archive', icon: Archive, href: `/spaces/${space.slug}/projects/${project.slug}/archive` },
+        {
+            id: 'archive',
+            label: 'Archive',
+            icon: Archive,
+            href: `/spaces/${space.slug}/projects/${project.slug}/archive`,
+        },
     ];
 
-    const completedTasks = project.tasks?.filter(t => t.status?.name?.toLowerCase().includes('done') || t.status?.name?.toLowerCase().includes('complete')).length || 0;
+    const completedTasks =
+        project.tasks?.filter(
+            (t) =>
+                t.status?.name?.toLowerCase().includes('done') ||
+                t.status?.name?.toLowerCase().includes('complete'),
+        ).length || 0;
     const totalTasks = project.tasks?.length || 0;
-    const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const completionPercentage =
+        totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${project.name} - ${space.name}`} />
 
-            <div className="flex flex-col h-full overflow-hidden">
-                <header className="flex items-center justify-between p-4 px-6 border-b bg-background/50 backdrop-blur">
+            <div className="flex h-full flex-col overflow-hidden">
+                <header className="flex items-center justify-between border-b bg-background/50 p-4 px-6 backdrop-blur">
                     <div className="flex items-center gap-x-4">
                         <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/spaces/${space.slug}/settings?tab=projects`}>
-                                <ArrowLeft className="w-5 h-5" />
+                            <Link
+                                href={`/spaces/${space.slug}/settings?tab=projects`}
+                            >
+                                <ArrowLeft className="h-5 w-5" />
                             </Link>
                         </Button>
                         <div
-                            className="flex items-center justify-center w-12 h-12 rounded-lg shadow-sm"
-                            style={{ backgroundColor: project.color || '#3b82f6' }}
+                            className="flex h-12 w-12 items-center justify-center rounded-lg shadow-sm"
+                            style={{
+                                backgroundColor: project.color || '#3b82f6',
+                            }}
                         >
-                            <FolderPlus className="w-6 h-6 text-white" />
+                            <FolderPlus className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold leading-tight">{project.name}</h1>
-                            <div className="flex items-center text-xs text-muted-foreground gap-x-2">
+                            <h1 className="text-xl leading-tight font-bold">
+                                {project.name}
+                            </h1>
+                            <div className="flex items-center gap-x-2 text-xs text-muted-foreground">
                                 <span className="flex items-center">
-                                    <Users className="w-3 h-3 mr-1" /> {project.members?.length || 0} Members
+                                    <Users className="mr-1 h-3 w-3" />{' '}
+                                    {project.members?.length || 0} Members
                                 </span>
                                 <span>•</span>
                                 <span className="flex items-center">
-                                    <ListTodo className="w-3 h-3 mr-1" /> {totalTasks} Tasks
+                                    <ListTodo className="mr-1 h-3 w-3" />{' '}
+                                    {totalTasks} Tasks
                                 </span>
                                 <span>•</span>
                                 <span className="flex items-center">
-                                    <CheckCircle2 className="w-3 h-3 mr-1" /> {completionPercentage}% Complete
+                                    <CheckCircle2 className="mr-1 h-3 w-3" />{' '}
+                                    {completionPercentage}% Complete
                                 </span>
                             </div>
                         </div>
@@ -199,77 +236,102 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                         {activeTab === 'tasks' && (
                             <>
                                 <Button
-                                    variant={memberViewEnabled ? 'secondary' : 'ghost'}
+                                    variant={
+                                        memberViewEnabled
+                                            ? 'secondary'
+                                            : 'ghost'
+                                    }
                                     size="sm"
                                     onClick={() => {
-                                        setMemberViewEnabled(!memberViewEnabled);
-                                        if (memberViewEnabled) setSelectedMemberId(null);
+                                        setMemberViewEnabled(
+                                            !memberViewEnabled,
+                                        );
+                                        if (memberViewEnabled)
+                                            setSelectedMemberId(null);
                                     }}
-                                    className={cn("gap-2", memberViewEnabled && "bg-primary/10 text-primary border-primary/20")}
+                                    className={cn(
+                                        'gap-2',
+                                        memberViewEnabled &&
+                                            'border-primary/20 bg-primary/10 text-primary',
+                                    )}
                                 >
-                                    <Users className="w-4 h-4" />
+                                    <Users className="h-4 w-4" />
                                     Member View
                                 </Button>
-                                <Button size="sm" onClick={() => { setSelectedTask(null); setIsTaskModalOpen(true); }}>
-                                    <ListTodo className="w-4 h-4 mr-2" /> New Task
+                                <Button
+                                    size="sm"
+                                    onClick={() => {
+                                        setSelectedTask(null);
+                                        setIsTaskModalOpen(true);
+                                    }}
+                                >
+                                    <ListTodo className="mr-2 h-4 w-4" /> New
+                                    Task
                                 </Button>
                             </>
                         )}
                         {activeTab === 'members' && can.manageMembers && (
-                            <Button size="sm" onClick={() => setIsMemberModalOpen(true)}>
-                                <UserPlus className="w-4 h-4 mr-2" /> Add Member
+                            <Button
+                                size="sm"
+                                onClick={() => setIsMemberModalOpen(true)}
+                            >
+                                <UserPlus className="mr-2 h-4 w-4" /> Add Member
                             </Button>
                         )}
                     </div>
                 </header>
 
                 {/* Tab bar in its own dedicated row so it never shifts with action buttons */}
-                <nav className="flex items-center px-6 border-b bg-background">
-                    {tabs.map((tab) => (
+                <nav className="flex items-center border-b bg-background px-6">
+                    {tabs.map((tab) =>
                         tab.href ? (
                             <Link
                                 key={tab.id}
                                 href={tab.href}
-                                className="flex items-center gap-x-1.5 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative border-b-2 border-transparent -mb-px"
+                                className="relative -mb-px flex items-center gap-x-1.5 border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                             >
-                                <tab.icon className="w-3.5 h-3.5" />
+                                <tab.icon className="h-3.5 w-3.5" />
                                 {tab.label}
                             </Link>
                         ) : (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => setActiveTab(tab.id as 'tasks' | 'sprints' | 'members' | 'settings')}
                                 className={cn(
-                                    "flex items-center gap-x-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative border-b-2 -mb-px",
+                                    'relative -mb-px flex items-center gap-x-1.5 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
                                     activeTab === tab.id
-                                        ? "text-primary border-primary"
-                                        : "text-muted-foreground border-transparent hover:text-foreground hover:border-muted-foreground/30"
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground',
                                 )}
                             >
-                                <tab.icon className="w-3.5 h-3.5" />
+                                <tab.icon className="h-3.5 w-3.5" />
                                 {tab.label}
                                 {tab.count !== undefined && (
-                                    <span className={cn(
-                                        "ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full tabular-nums min-w-[18px] text-center",
-                                        activeTab === tab.id
-                                            ? "bg-primary/10 text-primary"
-                                            : "bg-muted text-muted-foreground"
-                                    )}>
+                                    <span
+                                        className={cn(
+                                            'ml-1 min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold tabular-nums',
+                                            activeTab === tab.id
+                                                ? 'bg-primary/10 text-primary'
+                                                : 'bg-muted text-muted-foreground',
+                                        )}
+                                    >
                                         {tab.count}
                                     </span>
                                 )}
                             </button>
-                        )
-                    ))}
+                        ),
+                    )}
                 </nav>
 
                 {totalTasks > 0 && (
-                    <div className="px-6 py-3 border-b bg-muted/30">
-                        <div className="flex items-center justify-between mb-1 text-xs text-muted-foreground">
+                    <div className="border-b bg-muted/30 px-6 py-3">
+                        <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                             <span>Project Progress</span>
-                            <span>{completedTasks} of {totalTasks} tasks completed</span>
+                            <span>
+                                {completedTasks} of {totalTasks} tasks completed
+                            </span>
                         </div>
-                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                             <div
                                 className="h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500"
                                 style={{ width: `${completionPercentage}%` }}
@@ -278,12 +340,10 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                     </div>
                 )}
 
-
                 <div className="flex-1 overflow-auto px-6 py-2">
                     {/* Tasks Tab */}
                     {activeTab === 'tasks' && (
-                        <div className="space-y-2 h-full flex flex-col">
-
+                        <div className="flex h-full flex-col space-y-2">
                             <TaskFilterBar
                                 space={space}
                                 members={space.members || []}
@@ -293,56 +353,86 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                                 hideProjectFilter={true}
                             />
 
-                            <div className="flex-1 flex overflow-hidden gap-6">
+                            <div className="flex flex-1 gap-6 overflow-hidden">
                                 {/* Member Sidebar */}
                                 {memberViewEnabled && (
-                                    <div className="w-64 flex flex-col border rounded-xl bg-card overflow-hidden shrink-0">
-                                        <div className="p-4 border-b bg-muted/30">
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Project Members</h3>
+                                    <div className="flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border bg-card">
+                                        <div className="border-b bg-muted/30 p-4">
+                                            <h3 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                                                Project Members
+                                            </h3>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                        <div className="flex-1 space-y-1 overflow-y-auto p-2">
                                             <button
-                                                onClick={() => setSelectedMemberId(null)}
+                                                onClick={() =>
+                                                    setSelectedMemberId(null)
+                                                }
                                                 className={cn(
-                                                    "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all text-left",
+                                                    'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-all',
                                                     selectedMemberId === null
-                                                        ? "bg-primary text-primary-foreground shadow-md"
-                                                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                                        ? 'bg-primary text-primary-foreground shadow-md'
+                                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className={cn(
-                                                        "w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px]",
-                                                        selectedMemberId === null ? "bg-white/20" : "bg-primary/10 text-primary"
-                                                    )}>
+                                                    <div
+                                                        className={cn(
+                                                            'flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold',
+                                                            selectedMemberId ===
+                                                                null
+                                                                ? 'bg-white/20'
+                                                                : 'bg-primary/10 text-primary',
+                                                        )}
+                                                    >
                                                         ALL
                                                     </div>
                                                     <span>All Tasks</span>
                                                 </div>
-                                                {selectedMemberId === null && <Check className="w-4 h-4" />}
+                                                {selectedMemberId === null && (
+                                                    <Check className="h-4 w-4" />
+                                                )}
                                             </button>
 
                                             {project.members?.map((member) => (
                                                 <button
                                                     key={member.id}
-                                                    onClick={() => setSelectedMemberId(member.user.id)}
+                                                    onClick={() =>
+                                                        setSelectedMemberId(
+                                                            member.user.id,
+                                                        )
+                                                    }
                                                     className={cn(
-                                                        "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all text-left",
-                                                        selectedMemberId === member.user.id
-                                                            ? "bg-primary text-primary-foreground shadow-md"
-                                                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                                        'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-all',
+                                                        selectedMemberId ===
+                                                            member.user.id
+                                                            ? 'bg-primary text-primary-foreground shadow-md'
+                                                            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                                                     )}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <div className={cn(
-                                                            "w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px]",
-                                                            selectedMemberId === member.user.id ? "bg-white/20" : "bg-primary/10 text-primary"
-                                                        )}>
-                                                            {getInitials(member.user.name)}
+                                                        <div
+                                                            className={cn(
+                                                                'flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold',
+                                                                selectedMemberId ===
+                                                                    member.user
+                                                                        .id
+                                                                    ? 'bg-white/20'
+                                                                    : 'bg-primary/10 text-primary',
+                                                            )}
+                                                        >
+                                                            {getInitials(
+                                                                member.user
+                                                                    .name,
+                                                            )}
                                                         </div>
-                                                        <span className="truncate">{member.user.name}</span>
+                                                        <span className="truncate">
+                                                            {member.user.name}
+                                                        </span>
                                                     </div>
-                                                    {selectedMemberId === member.user.id && <Check className="w-4 h-4" />}
+                                                    {selectedMemberId ===
+                                                        member.user.id && (
+                                                        <Check className="h-4 w-4" />
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
@@ -350,26 +440,50 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                                 )}
 
                                 {/* Tasks Main Area */}
-                                <div className="flex-1 flex flex-col min-w-0 space-y-2">
+                                <div className="flex min-w-0 flex-1 flex-col space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center bg-muted/50 p-1 rounded-lg border shadow-sm">
+                                        <div className="flex items-center rounded-lg border bg-muted/50 p-1 shadow-sm">
                                             <Button
-                                                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                                                variant={
+                                                    viewMode === 'list'
+                                                        ? 'secondary'
+                                                        : 'ghost'
+                                                }
                                                 size="sm"
-                                                className={cn("h-7 px-3 gap-2", viewMode === 'list' && "bg-background shadow-sm")}
-                                                onClick={() => setViewMode('list')}
+                                                className={cn(
+                                                    'h-7 gap-2 px-3',
+                                                    viewMode === 'list' &&
+                                                        'bg-background shadow-sm',
+                                                )}
+                                                onClick={() =>
+                                                    setViewMode('list')
+                                                }
                                             >
-                                                <List className="w-4 h-4" />
-                                                <span className="text-xs font-bold">List</span>
+                                                <List className="h-4 w-4" />
+                                                <span className="text-xs font-bold">
+                                                    List
+                                                </span>
                                             </Button>
                                             <Button
-                                                variant={viewMode === 'board' ? 'secondary' : 'ghost'}
+                                                variant={
+                                                    viewMode === 'board'
+                                                        ? 'secondary'
+                                                        : 'ghost'
+                                                }
                                                 size="sm"
-                                                className={cn("h-7 px-3 gap-2", viewMode === 'board' && "bg-background shadow-sm")}
-                                                onClick={() => setViewMode('board')}
+                                                className={cn(
+                                                    'h-7 gap-2 px-3',
+                                                    viewMode === 'board' &&
+                                                        'bg-background shadow-sm',
+                                                )}
+                                                onClick={() =>
+                                                    setViewMode('board')
+                                                }
                                             >
-                                                <LayoutGrid className="w-4 h-4" />
-                                                <span className="text-xs font-bold">Board</span>
+                                                <LayoutGrid className="h-4 w-4" />
+                                                <span className="text-xs font-bold">
+                                                    Board
+                                                </span>
                                             </Button>
                                         </div>
                                     </div>
@@ -377,18 +491,47 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                                     <div className="flex-1 overflow-hidden">
                                         {viewMode === 'list' ? (
                                             <TasksList
-                                                tasks={(project.tasks || []).filter(t => !selectedMemberId || t.assignees?.some((a: any) => a.id === selectedMemberId))}
+                                                tasks={(
+                                                    project.tasks || []
+                                                ).filter(
+                                                    (t) =>
+                                                        !selectedMemberId ||
+                                                        t.assignees?.some(
+                                                            (a) =>
+                                                                a.id ===
+                                                                selectedMemberId,
+                                                        ),
+                                                )}
                                                 statuses={effectiveStatuses}
                                                 space={space}
-                                                onEditTask={(task) => { setSelectedTask(task); setIsTaskModalOpen(true); }}
-                                                onCreateTask={() => { setSelectedTask(null); setIsTaskModalOpen(true); }}
+                                                onEditTask={(task) => {
+                                                    setSelectedTask(task);
+                                                    setIsTaskModalOpen(true);
+                                                }}
+                                                onCreateTask={() => {
+                                                    setSelectedTask(null);
+                                                    setIsTaskModalOpen(true);
+                                                }}
                                             />
                                         ) : (
                                             <BoardView
-                                                tasks={(project.tasks || []).filter(t => !selectedMemberId || t.assignees?.some((a: any) => a.id === selectedMemberId))}
+                                                tasks={(
+                                                    project.tasks || []
+                                                ).filter(
+                                                    (t) =>
+                                                        !selectedMemberId ||
+                                                        t.assignees?.some(
+                                                            (a) =>
+                                                                a.id ===
+                                                                selectedMemberId,
+                                                        ),
+                                                )}
                                                 statuses={effectiveStatuses}
                                                 space={space}
-                                                onEditTask={(task) => { setSelectedTask(task); setIsTaskModalOpen(true); }}
+                                                onEditTask={(task) => {
+                                                    setSelectedTask(task);
+                                                    setIsTaskModalOpen(true);
+                                                }}
                                                 onCreateTask={() => {
                                                     setSelectedTask(null);
                                                     setIsTaskModalOpen(true);
@@ -414,42 +557,71 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                     {activeTab === 'members' && (
                         <div className="max-w-3xl">
                             <div className="space-y-3">
-                                {project.members && project.members.length > 0 ? (
+                                {project.members &&
+                                project.members.length > 0 ? (
                                     project.members.map((member) => (
-                                        <div key={member.id} className="p-4 rounded-lg border bg-card flex items-center justify-between">
+                                        <div
+                                            key={member.id}
+                                            className="flex items-center justify-between rounded-lg border bg-card p-4"
+                                        >
                                             <div className="flex items-center gap-x-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
-                                                    {getInitials(member.user.name)}
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                                                    {getInitials(
+                                                        member.user.name,
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium">{member.user.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{member.user.email}</p>
+                                                    <p className="font-medium">
+                                                        {member.user.name}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {member.user.email}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-x-2">
-                                                <span className={cn(
-                                                    "px-2 py-1 text-xs rounded-full",
-                                                    member.role === 'admin' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                                                )}>
+                                                <span
+                                                    className={cn(
+                                                        'rounded-full px-2 py-1 text-xs',
+                                                        member.role === 'admin'
+                                                            ? 'bg-primary/10 text-primary'
+                                                            : 'bg-muted text-muted-foreground',
+                                                    )}
+                                                >
                                                     {member.role}
                                                 </span>
                                                 {can.manageMembers && (
                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
-                                                                <MoreHorizontal className="w-4 h-4" />
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                            >
+                                                                <MoreHorizontal className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem
                                                                 className="text-destructive"
                                                                 onClick={() => {
-                                                                    if (confirm('Remove this member from the project?')) {
-                                                                        router.delete(`/spaces/${space.slug}/projects/${project.slug}/members/${member.user.id}`, { preserveScroll: true });
+                                                                    if (
+                                                                        confirm(
+                                                                            'Remove this member from the project?',
+                                                                        )
+                                                                    ) {
+                                                                        router.delete(
+                                                                            `/spaces/${space.slug}/projects/${project.slug}/members/${member.user.id}`,
+                                                                            {
+                                                                                preserveScroll: true,
+                                                                            },
+                                                                        );
                                                                     }
                                                                 }}
                                                             >
-                                                                <Trash2 className="w-4 h-4 mr-2" /> Remove
+                                                                <Trash2 className="mr-2 h-4 w-4" />{' '}
+                                                                Remove
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
@@ -458,11 +630,17 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                                        <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                                        <p className="text-muted-foreground mb-4">No members in this project yet</p>
+                                    <div className="rounded-lg border-2 border-dashed py-12 text-center">
+                                        <Users className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                                        <p className="mb-4 text-muted-foreground">
+                                            No members in this project yet
+                                        </p>
                                         {can.manageMembers && (
-                                            <Button onClick={() => setIsMemberModalOpen(true)}>
+                                            <Button
+                                                onClick={() =>
+                                                    setIsMemberModalOpen(true)
+                                                }
+                                            >
                                                 Add your first member
                                             </Button>
                                         )}
@@ -475,36 +653,62 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                     {/* Settings Tab */}
                     {activeTab === 'settings' && (
                         <div className="max-w-2xl space-y-6">
-
                             {/* Project Statuses */}
-                            <section className="p-6 border rounded-xl bg-card shadow-sm">
-                                <h2 className="text-lg font-semibold mb-4">Task Statuses</h2>
-                                <p className="text-sm text-muted-foreground mb-4">
-                                    Define custom statuses for this project. If no custom statuses are defined, space statuses are used.
+                            <section className="rounded-xl border bg-card p-6 shadow-sm">
+                                <h2 className="mb-4 text-lg font-semibold">
+                                    Task Statuses
+                                </h2>
+                                <p className="mb-4 text-sm text-muted-foreground">
+                                    Define custom statuses for this project. If
+                                    no custom statuses are defined, space
+                                    statuses are used.
                                 </p>
-                                <ProjectStatusList space={space} project={project} />
+                                <ProjectStatusList
+                                    space={space}
+                                    project={project}
+                                />
                             </section>
 
-                            <section className="p-6 border rounded-xl bg-card shadow-sm">
-                                <h2 className="text-lg font-semibold mb-4">Project Settings</h2>
-                                <form onSubmit={submitSettings} className="space-y-4">
+                            <section className="rounded-xl border bg-card p-6 shadow-sm">
+                                <h2 className="mb-4 text-lg font-semibold">
+                                    Project Settings
+                                </h2>
+                                <form
+                                    onSubmit={submitSettings}
+                                    className="space-y-4"
+                                >
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Project Name</Label>
+                                        <Label htmlFor="name">
+                                            Project Name
+                                        </Label>
                                         <Input
                                             id="name"
                                             value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
+                                            onChange={(e) =>
+                                                setData('name', e.target.value)
+                                            }
                                             placeholder="Enter project name"
                                         />
-                                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                                        {errors.name && (
+                                            <p className="text-sm text-destructive">
+                                                {errors.name}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="description">Description</Label>
+                                        <Label htmlFor="description">
+                                            Description
+                                        </Label>
                                         <Textarea
                                             id="description"
                                             value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'description',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Describe this project"
                                             rows={3}
                                         />
@@ -517,39 +721,62 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                                                 id="color"
                                                 type="color"
                                                 value={data.color}
-                                                onChange={(e) => setData('color', e.target.value)}
-                                                className="w-20 h-10 cursor-pointer"
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'color',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="h-10 w-20 cursor-pointer"
                                             />
-                                            <span className="text-sm text-muted-foreground">{data.color}</span>
+                                            <span className="text-sm text-muted-foreground">
+                                                {data.color}
+                                            </span>
                                         </div>
                                     </div>
 
                                     <div className="flex justify-end pt-4">
-                                        <Button type="submit" disabled={processing}>
+                                        <Button
+                                            type="submit"
+                                            disabled={processing}
+                                        >
                                             Save Changes
                                         </Button>
                                     </div>
                                 </form>
                             </section>
 
-                            <section className="p-6 border rounded-xl bg-card shadow-sm border-destructive/50">
-                                <h2 className="text-lg font-semibold text-destructive mb-2">Danger Zone</h2>
-                                <p className="text-sm text-muted-foreground mb-4">
-                                    Delete this project. Tasks will not be deleted but will become unassigned.
+                            <section className="rounded-xl border border-destructive/50 bg-card p-6 shadow-sm">
+                                <h2 className="mb-2 text-lg font-semibold text-destructive">
+                                    Danger Zone
+                                </h2>
+                                <p className="mb-4 text-sm text-muted-foreground">
+                                    Delete this project. Tasks will not be
+                                    deleted but will become unassigned.
                                 </p>
                                 <Button
                                     variant="destructive"
                                     onClick={() => {
-                                        if (confirm('Are you sure? This action cannot be undone.')) {
-                                            router.delete(`/spaces/${space.slug}/projects/${project.slug}`, {
-                                                onSuccess: () => {
-                                                    router.visit(`/spaces/${space.slug}/settings?tab=projects`);
-                                                }
-                                            });
+                                        if (
+                                            confirm(
+                                                'Are you sure? This action cannot be undone.',
+                                            )
+                                        ) {
+                                            router.delete(
+                                                `/spaces/${space.slug}/projects/${project.slug}`,
+                                                {
+                                                    onSuccess: () => {
+                                                        router.visit(
+                                                            `/spaces/${space.slug}/settings?tab=projects`,
+                                                        );
+                                                    },
+                                                },
+                                            );
                                         }
                                     }}
                                 >
-                                    <Trash2 className="w-4 h-4 mr-2" /> Delete Project
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    Project
                                 </Button>
                             </section>
                         </div>
@@ -571,15 +798,24 @@ export default function Show({ space, project, filters, can }: ShowProps) {
                 statuses={effectiveStatuses}
                 sprints={project.sprints || []}
                 isOpen={isTaskModalOpen}
-                onClose={() => { setIsTaskModalOpen(false); setSelectedTask(null); }}
+                onClose={() => {
+                    setIsTaskModalOpen(false);
+                    setSelectedTask(null);
+                }}
                 onTaskSelect={(task) => setSelectedTask(task)}
             />
         </AppLayout>
     );
 }
 
-function ProjectStatusList({ space, project }: { space: any, project: Project }) {
-    const { data, setData, post, processing, reset, errors } = useForm({
+function ProjectStatusList({
+    space,
+    project,
+}: {
+    space: Space;
+    project: Project;
+}) {
+    const { data, setData, post, processing, reset } = useForm({
         name: '',
         color: '#6366f1',
     });
@@ -594,37 +830,55 @@ function ProjectStatusList({ space, project }: { space: any, project: Project })
 
     return (
         <div className="space-y-6">
-            <div className="space-y-2 border rounded-xl overflow-hidden bg-background">
+            <div className="space-y-2 overflow-hidden rounded-xl border bg-background">
                 {(!project.statuses || project.statuses.length === 0) && (
-                    <div className="p-8 text-center text-muted-foreground italic text-sm">
+                    <div className="p-8 text-center text-sm text-muted-foreground italic">
                         No custom statuses defined. Using space defaults.
                     </div>
                 )}
-                {project.statuses?.map((status: any) => (
-                    <div key={status.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                {project.statuses?.map((status) => (
+                    <div
+                        key={status.id}
+                        className="flex items-center justify-between p-4 transition-colors hover:bg-muted/50"
+                    >
                         <div className="flex items-center gap-x-3">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: status.color }} />
+                            <div
+                                className="h-3 w-3 rounded-full"
+                                style={{ backgroundColor: status.color }}
+                            />
                             <span className="font-medium">{status.name}</span>
                         </div>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                                if (confirm('Delete this status? Tasks will not be deleted.')) {
-                                    router.delete(`/spaces/${space.slug}/projects/${project.slug}/statuses/${status.id}`, { preserveScroll: true });
+                                if (
+                                    confirm(
+                                        'Delete this status? Tasks will not be deleted.',
+                                    )
+                                ) {
+                                    router.delete(
+                                        `/spaces/${space.slug}/projects/${project.slug}/statuses/${status.id}`,
+                                        { preserveScroll: true },
+                                    );
                                 }
                             }}
                         >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </div>
                 ))}
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 border rounded-xl bg-muted/30">
-                <h3 className="font-semibold mb-3 text-sm">Add Custom Status</h3>
+            <form
+                onSubmit={handleSubmit}
+                className="rounded-xl border bg-muted/30 p-4"
+            >
+                <h3 className="mb-3 text-sm font-semibold">
+                    Add Custom Status
+                </h3>
                 <div className="flex items-end gap-x-3">
-                    <div className="flex-1 grid gap-2">
+                    <div className="grid flex-1 gap-2">
                         <Label htmlFor="status_name">Status Name</Label>
                         <Input
                             id="status_name"
@@ -640,10 +894,14 @@ function ProjectStatusList({ space, project }: { space: any, project: Project })
                             type="color"
                             value={data.color}
                             onChange={(e) => setData('color', e.target.value)}
-                            className="w-20 h-10 cursor-pointer"
+                            className="h-10 w-20 cursor-pointer"
                         />
                     </div>
-                    <Button type="submit" disabled={processing || !data.name} className="px-6">
+                    <Button
+                        type="submit"
+                        disabled={processing || !data.name}
+                        className="px-6"
+                    >
                         Add
                     </Button>
                 </div>

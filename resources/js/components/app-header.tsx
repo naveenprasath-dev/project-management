@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Settings, HelpCircle } from 'lucide-react';
-import GlobalSearch from '@/components/global-search';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import GlobalSearch from '@/components/global-search';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,8 +12,6 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
-import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import type { BreadcrumbItem, SharedData } from '@/types';
 import NotificationBell from './notifications/notification-bell';
 
@@ -26,9 +24,9 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
     const getInitials = useInitials();
 
     return (
-        <header className="h-16 border-b border-border/60 bg-background/80 backdrop-blur-sm sticky top-0 flex items-center justify-between px-6 shrink-0 z-20">
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-6 backdrop-blur-sm">
             {/* Left: Sidebar Trigger & Breadcrumbs */}
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex min-w-0 items-center gap-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger />
                     <div className="hidden md:block">
@@ -40,44 +38,60 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
             </div>
 
             {/* Center: Search */}
-            <div className="hidden lg:flex items-center flex-1 max-w-md mx-8">
+            <div className="mx-8 hidden max-w-md flex-1 items-center lg:flex">
                 <GlobalSearch />
             </div>
 
             {/* Right: Actions & User Panel */}
             <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 mr-2">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" asChild>
+                <div className="mr-2 flex items-center gap-1.5">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                        asChild
+                    >
                         <Link href="/help">
-                            <HelpCircle className="w-5 h-5" />
+                            <HelpCircle className="h-5 w-5" />
                         </Link>
                     </Button>
 
                     <NotificationBell />
 
                     {(!space || auth.can_manage) && (
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" asChild>
-                            <Link href={space ? `/spaces/${(space as any).slug}/settings` : '/settings'}>
-                                <Settings className="w-5 h-5" />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                            asChild
+                        >
+                            <Link
+                                href={
+                                    space
+                                        ? `/spaces/${(space as { slug: string }).slug}/settings`
+                                        : '/settings'
+                                }
+                            >
+                                <Settings className="h-5 w-5" />
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <div className="h-6 w-[1px] bg-border mx-2 hidden sm:block" />
+                <div className="mx-2 hidden h-6 w-[1px] bg-border sm:block" />
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="ghost"
-                            className="h-10 w-10 p-0 rounded-full ring-offset-background hover:ring-2 hover:ring-primary/20 transition-all"
+                            className="h-10 w-10 rounded-full p-0 ring-offset-background transition-all hover:ring-2 hover:ring-primary/20"
                         >
                             <Avatar className="h-9 w-9 overflow-hidden">
                                 <AvatarImage
                                     src={auth.user.avatar}
                                     alt={auth.user.name}
                                 />
-                                <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold">
+                                <AvatarFallback className="rounded-lg bg-primary/10 font-bold text-primary">
                                     {getInitials(auth.user.name)}
                                 </AvatarFallback>
                             </Avatar>

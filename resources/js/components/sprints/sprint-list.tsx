@@ -1,7 +1,7 @@
 import { router, useForm, Link } from '@inertiajs/react';
+import { format } from 'date-fns';
 import {
     Calendar,
-    ChevronRight,
     MoreHorizontal,
     Play,
     CheckCircle2,
@@ -9,10 +9,17 @@ import {
     Plus,
     Clock,
     Target,
-    Archive
+    Archive,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,9 +29,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 interface Sprint {
     id: number;
@@ -38,39 +43,45 @@ interface Sprint {
 }
 
 interface SprintListProps {
-    space: any;
-    project: any;
+    space: { slug: string };
+    project: { slug: string };
     sprints: Sprint[];
 }
 
-export default function SprintList({ space, project, sprints }: SprintListProps) {
+export default function SprintList({
+    space,
+    project,
+    sprints,
+}: SprintListProps) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
 
-    const activeSprints = sprints.filter(s => s.status === 'active');
-    const plannedSprints = sprints.filter(s => s.status === 'planned');
-    const completedSprints = sprints.filter(s => s.status === 'completed');
+    const activeSprints = sprints.filter((s) => s.status === 'active');
+    const plannedSprints = sprints.filter((s) => s.status === 'planned');
+    const completedSprints = sprints.filter((s) => s.status === 'completed');
 
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-lg font-bold">Project Sprints</h2>
-                    <p className="text-sm text-muted-foreground">Manage time-boxed iterations for this project.</p>
+                    <p className="text-sm text-muted-foreground">
+                        Manage time-boxed iterations for this project.
+                    </p>
                 </div>
                 <Button onClick={() => setIsCreateModalOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" /> Create Sprint
+                    <Plus className="mr-2 h-4 w-4" /> Create Sprint
                 </Button>
             </div>
 
             {/* Active Sprint Section */}
             {activeSprints.length > 0 && (
                 <section>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-4 flex items-center gap-2">
-                        <Play className="w-4 h-4" /> Active Sprint
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wider text-primary uppercase">
+                        <Play className="h-4 w-4" /> Active Sprint
                     </h3>
                     <div className="grid gap-4">
-                        {activeSprints.map(sprint => (
+                        {activeSprints.map((sprint) => (
                             <SprintCard
                                 key={sprint.id}
                                 sprint={sprint}
@@ -85,12 +96,12 @@ export default function SprintList({ space, project, sprints }: SprintListProps)
 
             {/* Planned Sprints Section */}
             <section>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Planned Sprints
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wider text-muted-foreground uppercase">
+                    <Clock className="h-4 w-4" /> Planned Sprints
                 </h3>
                 <div className="grid gap-4">
                     {plannedSprints.length > 0 ? (
-                        plannedSprints.map(sprint => (
+                        plannedSprints.map((sprint) => (
                             <SprintCard
                                 key={sprint.id}
                                 sprint={sprint}
@@ -100,7 +111,7 @@ export default function SprintList({ space, project, sprints }: SprintListProps)
                             />
                         ))
                     ) : (
-                        <div className="text-center py-8 rounded-xl border-2 border-dashed text-muted-foreground bg-muted/20">
+                        <div className="rounded-xl border-2 border-dashed bg-muted/20 py-8 text-center text-muted-foreground">
                             No planned sprints. Create one to get started.
                         </div>
                     )}
@@ -110,11 +121,11 @@ export default function SprintList({ space, project, sprints }: SprintListProps)
             {/* Completed Sprints Section */}
             {completedSprints.length > 0 && (
                 <section>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" /> Completed Sprints
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wider text-muted-foreground uppercase">
+                        <CheckCircle2 className="h-4 w-4" /> Completed Sprints
                     </h3>
                     <div className="grid gap-4 opacity-70 grayscale-[0.5]">
-                        {completedSprints.map(sprint => (
+                        {completedSprints.map((sprint) => (
                             <SprintCard
                                 key={sprint.id}
                                 sprint={sprint}
@@ -142,68 +153,108 @@ export default function SprintList({ space, project, sprints }: SprintListProps)
     );
 }
 
-function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space: any, project: any, onEdit: () => void }) {
+function SprintCard({
+    sprint,
+    space,
+    project,
+    onEdit,
+}: {
+    sprint: Sprint;
+    space: { slug: string };
+    project: { slug: string };
+    onEdit: () => void;
+}) {
     const handleStart = () => {
-        if (confirm('Start this sprint? This will move it to the Active state.')) {
-            router.post(`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/start`);
+        if (
+            confirm('Start this sprint? This will move it to the Active state.')
+        ) {
+            router.post(
+                `/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/start`,
+            );
         }
     };
 
     const handleComplete = () => {
         if (confirm('Complete this sprint?')) {
-            router.post(`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/complete`);
+            router.post(
+                `/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/complete`,
+            );
         }
     };
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this sprint?')) {
-            router.delete(`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}`);
+            router.delete(
+                `/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}`,
+            );
         }
     };
 
     const handleArchive = () => {
-        if (confirm('Archive this sprint? it will be moved to the archive section.')) {
-            router.post(`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/archive`);
+        if (
+            confirm(
+                'Archive this sprint? it will be moved to the archive section.',
+            )
+        ) {
+            router.post(
+                `/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}/archive`,
+            );
         }
     };
 
     return (
-        <div className={cn(
-            "p-5 rounded-xl border bg-card transition-all hover:shadow-md group",
-            sprint.status === 'active' ? "border-primary/50 ring-1 ring-primary/20" : ""
-        )}>
+        <div
+            className={cn(
+                'group rounded-xl border bg-card p-5 transition-all hover:shadow-md',
+                sprint.status === 'active'
+                    ? 'border-primary/50 ring-1 ring-primary/20'
+                    : '',
+            )}
+        >
             <div className="flex items-start justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-3">
                         <Link
                             href={`/spaces/${space.slug}/projects/${project.slug}/sprints/${sprint.id}`}
-                            className="font-bold text-lg hover:underline decoration-primary underline-offset-4"
+                            className="text-lg font-bold decoration-primary underline-offset-4 hover:underline"
                         >
                             {sprint.name}
                         </Link>
-                        <span className={cn(
-                            "px-2 py-0.5 text-[10px] font-bold rounded-full uppercase",
-                            sprint.status === 'active' ? "bg-primary text-primary-foreground" :
-                                sprint.status === 'completed' ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"
-                        )}>
+                        <span
+                            className={cn(
+                                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase',
+                                sprint.status === 'active'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : sprint.status === 'completed'
+                                      ? 'bg-green-500/10 text-green-600'
+                                      : 'bg-muted text-muted-foreground',
+                            )}
+                        >
                             {sprint.status}
                         </span>
                     </div>
                     {sprint.goal && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Target className="w-3.5 h-3.5" />
+                            <Target className="h-3.5 w-3.5" />
                             <span>{sprint.goal}</span>
                         </div>
                     )}
-                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                    <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {sprint.start_date ? format(new Date(sprint.start_date), 'MMM d') : 'No start date'}
+                            <Calendar className="h-3.5 w-3.5" />
+                            {sprint.start_date
+                                ? format(new Date(sprint.start_date), 'MMM d')
+                                : 'No start date'}
                             {' - '}
-                            {sprint.end_date ? format(new Date(sprint.end_date), 'MMM d, yyyy') : 'No end date'}
+                            {sprint.end_date
+                                ? format(
+                                      new Date(sprint.end_date),
+                                      'MMM d, yyyy',
+                                  )
+                                : 'No end date'}
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
+                            <Clock className="h-3.5 w-3.5" />
                             {sprint.tasks_count || 0} Tasks
                         </div>
                     </div>
@@ -212,19 +263,29 @@ function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space:
                 <div className="flex items-center gap-2">
                     {sprint.status === 'planned' && (
                         <Button size="sm" onClick={handleStart} className="h-8">
-                            <Play className="w-3.5 h-3.5 mr-1.5" /> Start
+                            <Play className="mr-1.5 h-3.5 w-3.5" /> Start
                         </Button>
                     )}
                     {sprint.status === 'active' && (
-                        <Button size="sm" variant="outline" onClick={handleComplete} className="h-8 text-green-600 hover:text-green-700">
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleComplete}
+                            className="h-8 text-green-600 hover:text-green-700"
+                        >
+                            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />{' '}
+                            Complete
                         </Button>
                     )}
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="w-4 h-4" />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                            >
+                                <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -232,10 +293,15 @@ function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space:
                                 Edit Details
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleArchive}>
-                                <Archive className="w-4 h-4 mr-2" /> Archive Sprint
+                                <Archive className="mr-2 h-4 w-4" /> Archive
+                                Sprint
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-                                <Trash2 className="w-4 h-4 mr-2" /> Delete Sprint
+                            <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={handleDelete}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                Sprint
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -243,13 +309,27 @@ function SprintCard({ sprint, space, project, onEdit }: { sprint: Sprint, space:
             </div>
 
             {sprint.description && (
-                <p className="mt-4 text-sm text-muted-foreground line-clamp-2">{sprint.description}</p>
+                <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">
+                    {sprint.description}
+                </p>
             )}
         </div>
     );
 }
 
-function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: boolean, onClose: () => void, space: any, project: any, sprint?: Sprint | null }) {
+function SprintFormModal({
+    isOpen,
+    onClose,
+    space,
+    project,
+    sprint,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    space: { slug: string };
+    project: { slug: string };
+    sprint?: Sprint | null;
+}) {
     const { data, setData, post, patch, processing, reset, errors } = useForm({
         name: sprint?.name || '',
         description: sprint?.description || '',
@@ -272,7 +352,7 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
             onSuccess: () => {
                 onClose();
                 reset();
-            }
+            },
         });
     };
 
@@ -280,7 +360,9 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Edit Sprint' : 'Create New Sprint'}</DialogTitle>
+                    <DialogTitle>
+                        {isEditing ? 'Edit Sprint' : 'Create New Sprint'}
+                    </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="grid gap-2">
@@ -288,10 +370,14 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
                         <Input
                             id="name"
                             value={data.name}
-                            onChange={e => setData('name', e.target.value)}
+                            onChange={(e) => setData('name', e.target.value)}
                             placeholder="e.g., Sprint 1, Q1 Iteration"
                         />
-                        {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                        {errors.name && (
+                            <p className="text-xs text-destructive">
+                                {errors.name}
+                            </p>
+                        )}
                     </div>
 
                     <div className="grid gap-2">
@@ -299,7 +385,7 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
                         <Input
                             id="goal"
                             value={data.goal}
-                            onChange={e => setData('goal', e.target.value)}
+                            onChange={(e) => setData('goal', e.target.value)}
                             placeholder="Primary objective for this sprint"
                         />
                     </div>
@@ -311,7 +397,9 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
                                 id="start_date"
                                 type="date"
                                 value={data.start_date}
-                                onChange={e => setData('start_date', e.target.value)}
+                                onChange={(e) =>
+                                    setData('start_date', e.target.value)
+                                }
                             />
                         </div>
                         <div className="grid gap-2">
@@ -320,7 +408,9 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
                                 id="end_date"
                                 type="date"
                                 value={data.end_date}
-                                onChange={e => setData('end_date', e.target.value)}
+                                onChange={(e) =>
+                                    setData('end_date', e.target.value)
+                                }
                             />
                         </div>
                     </div>
@@ -330,14 +420,18 @@ function SprintFormModal({ isOpen, onClose, space, project, sprint }: { isOpen: 
                         <Textarea
                             id="description"
                             value={data.description}
-                            onChange={e => setData('description', e.target.value)}
+                            onChange={(e) =>
+                                setData('description', e.target.value)
+                            }
                             placeholder="Additional context or notes"
                             rows={3}
                         />
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+                        <Button type="button" variant="ghost" onClick={onClose}>
+                            Cancel
+                        </Button>
                         <Button type="submit" disabled={processing}>
                             {isEditing ? 'Save Changes' : 'Create Sprint'}
                         </Button>

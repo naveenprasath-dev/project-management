@@ -15,13 +15,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 interface ProjectModalProps {
-    space: any;
+    space: { slug: string };
     isOpen: boolean;
     onClose: () => void;
-    project?: any;
+    project?: { id: number; name: string; description?: string; color?: string };
 }
 
-export default function ProjectModal({ space, isOpen, onClose, project }: ProjectModalProps) {
+export default function ProjectModal({
+    space,
+    isOpen,
+    onClose,
+    project,
+}: ProjectModalProps) {
     const { data, setData, post, patch, processing, reset, errors } = useForm({
         name: '',
         description: '',
@@ -62,7 +67,11 @@ export default function ProjectModal({ space, isOpen, onClose, project }: Projec
                 <form onSubmit={submit}>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            {project ? <Save className="w-5 h-5 text-primary" /> : <FolderPlus className="w-5 h-5 text-primary" />}
+                            {project ? (
+                                <Save className="h-5 w-5 text-primary" />
+                            ) : (
+                                <FolderPlus className="h-5 w-5 text-primary" />
+                            )}
                             {project ? 'Edit Project' : 'Create New Project'}
                         </DialogTitle>
                         <DialogDescription>
@@ -76,12 +85,20 @@ export default function ProjectModal({ space, isOpen, onClose, project }: Projec
                             <Input
                                 id="name"
                                 value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
+                                onChange={(e) =>
+                                    setData('name', e.target.value)
+                                }
                                 placeholder="Enter project name"
-                                className={errors.name ? 'border-destructive' : ''}
+                                className={
+                                    errors.name ? 'border-destructive' : ''
+                                }
                                 autoFocus
                             />
-                            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                            {errors.name && (
+                                <p className="text-xs text-destructive">
+                                    {errors.name}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid gap-2">
@@ -89,7 +106,9 @@ export default function ProjectModal({ space, isOpen, onClose, project }: Projec
                             <Textarea
                                 id="description"
                                 value={data.description}
-                                onChange={(e) => setData('description', e.target.value)}
+                                onChange={(e) =>
+                                    setData('description', e.target.value)
+                                }
                                 placeholder="Add project description..."
                                 rows={3}
                             />
@@ -102,18 +121,26 @@ export default function ProjectModal({ space, isOpen, onClose, project }: Projec
                                     id="color"
                                     type="color"
                                     value={data.color}
-                                    onChange={(e) => setData('color', e.target.value)}
-                                    className="w-20 h-10 cursor-pointer"
+                                    onChange={(e) =>
+                                        setData('color', e.target.value)
+                                    }
+                                    className="h-10 w-20 cursor-pointer"
                                 />
-                                <span className="text-sm text-muted-foreground">{data.color}</span>
+                                <span className="text-sm text-muted-foreground">
+                                    {data.color}
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+                        <Button type="button" variant="ghost" onClick={onClose}>
+                            Cancel
+                        </Button>
                         <Button type="submit" disabled={processing}>
-                            {processing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            {processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             {project ? 'Save Changes' : 'Create Project'}
                         </Button>
                     </DialogFooter>

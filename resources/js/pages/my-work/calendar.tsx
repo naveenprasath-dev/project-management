@@ -10,30 +10,29 @@ import {
     isSameDay,
     addMonths,
     subMonths,
-    isToday
+    isToday,
 } from 'date-fns';
 import {
     Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
     Plus,
-    MoreHorizontal
 } from 'lucide-react';
 import { useState } from 'react';
 import TaskModal from '@/components/tasks/task-modal';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, Space, Task } from '@/types';
 
 interface PageProps {
-    tasks: any[];
-    spaces: any[];
+    tasks: Task[];
+    spaces: Space[];
 }
 
 export default function CalendarPage({ tasks, spaces }: PageProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -56,10 +55,12 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
     const goToToday = () => setCurrentMonth(new Date());
 
     const getTasksForDay = (day: Date) => {
-        return tasks.filter(task => task.due_date && isSameDay(new Date(task.due_date), day));
+        return tasks.filter(
+            (task) => task.due_date && isSameDay(new Date(task.due_date), day),
+        );
     };
 
-    const handleTaskClick = (task: any) => {
+    const handleTaskClick = (task: Task) => {
         setSelectedTask(task);
         setIsModalOpen(true);
     };
@@ -74,39 +75,57 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Calendar" />
 
-            <div className="flex flex-col h-full bg-background overflow-hidden text-slate-900 dark:text-slate-100">
+            <div className="flex h-full flex-col overflow-hidden bg-background text-slate-900 dark:text-slate-100">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 px-6 border-b bg-background z-10">
+                <div className="z-10 flex items-center justify-between border-b bg-background p-4 px-6">
                     <div className="flex items-center gap-4">
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                            <CalendarIcon className="w-5 h-5" />
+                        <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                            <CalendarIcon className="h-5 w-5" />
                         </div>
-                        <h1 className="text-xl font-bold min-w-[200px]">
+                        <h1 className="min-w-[200px] text-xl font-bold">
                             {format(currentMonth, 'MMMM yyyy')}
                         </h1>
-                        <div className="flex items-center border rounded-md overflow-hidden bg-muted/20">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r" onClick={prevMonth}>
-                                <ChevronLeft className="w-4 h-4" />
+                        <div className="flex items-center overflow-hidden rounded-md border bg-muted/20">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-none border-r"
+                                onClick={prevMonth}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-8 px-3 rounded-none text-[10px] font-bold uppercase tracking-wider border-r" onClick={goToToday}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 rounded-none border-r px-3 text-[10px] font-bold tracking-wider uppercase"
+                                onClick={goToToday}
+                            >
                                 Today
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none" onClick={nextMonth}>
-                                <ChevronRight className="w-4 h-4" />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-none"
+                                onClick={nextMonth}
+                            >
+                                <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 mr-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                        <div className="mr-4 flex items-center gap-1.5 text-[10px] leading-none font-bold tracking-widest text-muted-foreground uppercase">
                             <span className="flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full bg-red-500" /> Urgent
+                                <div className="h-2 w-2 rounded-full bg-red-500" />{' '}
+                                Urgent
                             </span>
-                            <span className="flex items-center gap-1 ml-2">
-                                <div className="w-2 h-2 rounded-full bg-orange-500" /> High
+                            <span className="ml-2 flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-orange-500" />{' '}
+                                High
                             </span>
-                            <span className="flex items-center gap-1 ml-2">
-                                <div className="w-2 h-2 rounded-full bg-blue-500" /> Med
+                            <span className="ml-2 flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-blue-500" />{' '}
+                                Med
                             </span>
                         </div>
                         <Button
@@ -115,22 +134,24 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
                             className="shadow-sm"
                             onClick={() => handleAddTask(new Date())}
                         >
-                            <Plus className="w-4 h-4 mr-2" /> New Task
+                            <Plus className="mr-2 h-4 w-4" /> New Task
                         </Button>
                     </div>
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex min-h-0 flex-1 flex-col">
                     {/* Days of Week */}
-                    <div className="grid grid-cols-7 border-b bg-muted/30 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center py-2">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                            <div key={day}>{day}</div>
-                        ))}
+                    <div className="grid grid-cols-7 border-b bg-muted/30 py-2 text-center text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
+                            (day) => (
+                                <div key={day}>{day}</div>
+                            ),
+                        )}
                     </div>
 
                     {/* Days Grid */}
-                    <div className="flex-1 overflow-y-auto grid grid-cols-7 auto-rows-fr">
+                    <div className="grid flex-1 auto-rows-fr grid-cols-7 overflow-y-auto">
                         {calendarDays.map((day, idx) => {
                             const dayTasks = getTasksForDay(day);
                             const isCurrentMonth = isSameMonth(day, monthStart);
@@ -140,28 +161,40 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
                                 <div
                                     key={day.toString()}
                                     className={cn(
-                                        "min-h-[120px] p-2 border-r border-b group hover:bg-muted/10 transition-colors relative flex flex-col cursor-pointer",
-                                        !isCurrentMonth && "bg-muted/5",
-                                        idx % 7 === 6 && "border-r-0"
+                                        'group relative flex min-h-[120px] cursor-pointer flex-col border-r border-b p-2 transition-colors hover:bg-muted/10',
+                                        !isCurrentMonth && 'bg-muted/5',
+                                        idx % 7 === 6 && 'border-r-0',
                                     )}
                                     onClick={() => handleAddTask(day)}
                                 >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className={cn(
-                                            "text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full transition-all",
-                                            isTodayDay ? "bg-primary text-primary-foreground shadow-md" : (isCurrentMonth ? "text-foreground" : "text-muted-foreground opacity-40"),
-                                        )}>
+                                    <div className="mb-1 flex items-center justify-between">
+                                        <span
+                                            className={cn(
+                                                'flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold transition-all',
+                                                isTodayDay
+                                                    ? 'bg-primary text-primary-foreground shadow-md'
+                                                    : isCurrentMonth
+                                                      ? 'text-foreground'
+                                                      : 'text-muted-foreground opacity-40',
+                                            )}
+                                        >
                                             {format(day, 'd')}
                                         </span>
                                         {dayTasks.length > 0 && (
                                             <span className="text-[10px] font-bold text-muted-foreground/50">
-                                                {dayTasks.length} {dayTasks.length === 1 ? 'Task' : 'Tasks'}
+                                                {dayTasks.length}{' '}
+                                                {dayTasks.length === 1
+                                                    ? 'Task'
+                                                    : 'Tasks'}
                                             </span>
                                         )}
                                     </div>
 
-                                    <div className="flex-1 space-y-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                                        {dayTasks.map(task => (
+                                    <div
+                                        className="flex-1 space-y-1 overflow-hidden"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {dayTasks.map((task) => (
                                             <button
                                                 key={task.id}
                                                 onClick={(e) => {
@@ -169,19 +202,31 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
                                                     handleTaskClick(task);
                                                 }}
                                                 className={cn(
-                                                    "w-full text-left px-1.5 py-1 rounded text-[10px] font-medium truncate border shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform active:scale-[0.98]",
-                                                    task.priority === 'urgent' ? "bg-red-50 border-red-100 text-red-700 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400" :
-                                                        task.priority === 'high' ? "bg-orange-50 border-orange-100 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900/30 dark:text-orange-400" :
-                                                            task.priority === 'medium' ? "bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900/30 dark:text-blue-400" :
-                                                                "bg-background text-foreground dark:bg-slate-900 dark:border-slate-800"
+                                                    'w-full truncate rounded border px-1.5 py-1 text-left text-[10px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform active:scale-[0.98]',
+                                                    task.priority === 'urgent'
+                                                        ? 'border-red-100 bg-red-50 text-red-700 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400'
+                                                        : task.priority ===
+                                                            'high'
+                                                          ? 'border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/30 dark:bg-orange-950/20 dark:text-orange-400'
+                                                          : task.priority ===
+                                                              'medium'
+                                                            ? 'border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/30 dark:bg-blue-950/20 dark:text-blue-400'
+                                                            : 'bg-background text-foreground dark:border-slate-800 dark:bg-slate-900',
                                                 )}
                                             >
                                                 <div className="flex items-center gap-1">
                                                     <div
-                                                        className="w-1.5 h-1.5 rounded-full shrink-0"
-                                                        style={{ backgroundColor: task.space?.color || '#cbd5e1' }}
+                                                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                                        style={{
+                                                            backgroundColor:
+                                                                task.space
+                                                                    ?.color ||
+                                                                '#cbd5e1',
+                                                        }}
                                                     />
-                                                    <span className="truncate">{task.title}</span>
+                                                    <span className="truncate">
+                                                        {task.title}
+                                                    </span>
                                                 </div>
                                             </button>
                                         ))}
@@ -192,9 +237,9 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
                                             e.stopPropagation();
                                             handleAddTask(day);
                                         }}
-                                        className="absolute bottom-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary bg-background dark:bg-slate-900 rounded border shadow-sm"
+                                        className="absolute right-1 bottom-1 rounded border bg-background p-1 text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:text-primary dark:bg-slate-900"
                                     >
-                                        <Plus className="w-3.5 h-3.5" />
+                                        <Plus className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
                             );
@@ -206,14 +251,22 @@ export default function CalendarPage({ tasks, spaces }: PageProps) {
             {isModalOpen && (
                 <TaskModal
                     space={selectedTask?.space || spaces[0]}
-                    members={selectedTask?.space?.members || spaces[0]?.members || []}
+                    members={
+                        selectedTask?.space?.members || spaces[0]?.members || []
+                    }
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     task={selectedTask}
-                    statuses={selectedTask?.space?.statuses || spaces[0]?.statuses || []}
+                    statuses={
+                        selectedTask?.space?.statuses ||
+                        spaces[0]?.statuses ||
+                        []
+                    }
                     sprints={
                         // Aggregate all sprints from all projects in the space
-                        (selectedTask?.space || spaces[0])?.projects?.flatMap((p: any) => p.sprints || []) || []
+                        (selectedTask?.space || spaces[0])?.projects?.flatMap(
+                            (p) => p.sprints || [],
+                        ) || []
                     }
                 />
             )}
