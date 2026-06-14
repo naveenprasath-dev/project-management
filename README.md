@@ -6,9 +6,9 @@ A self-hosted project management application built with Laravel, Inertia.js, and
 
 ## Screenshots
 
-| Dashboard | My Tasks |
-|---|---|
-| ![Dashboard](.github/dashboard.png) | ![Task List](.github/tasks-list.png) |
+| Dashboard | Task List | Task Board |
+|---|---|---|
+| ![Dashboard](.github/dashboard.png) | ![Task List](.github/tasks-list.png) | ![Task Board](.github/tasks-board.png) |
 
 ## Features
 
