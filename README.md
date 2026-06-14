@@ -4,6 +4,12 @@ A self-hosted project management application built with Laravel, Inertia.js, and
 
 **[Live Demo →](https://project-management-develop-lxzqbj.laravel.cloud/)**
 
+## Screenshots
+
+| Dashboard | My Tasks |
+|---|---|
+| ![Dashboard](.github/dashboard.png) | ![Task List](.github/tasks-list.png) |
+
 ## Features
 
 - **Spaces** — Top-level workspaces to group projects by team or organization
