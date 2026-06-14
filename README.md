@@ -2,6 +2,8 @@
 
 A self-hosted project management application built with Laravel, Inertia.js, and React. Organize work into spaces, projects, sprints, and tasks — with real-time updates, team collaboration, and email notifications.
 
+**[Live Demo →](https://project-management-develop-lxzqbj.laravel.cloud/)**
+
 ## Features
 
 - **Spaces** — Top-level workspaces to group projects by team or organization
