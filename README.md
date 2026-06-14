@@ -10,6 +10,10 @@ A self-hosted project management application built with Laravel, Inertia.js, and
 |---|---|---|
 | ![Dashboard](.github/dashboard.png) | ![Task List](.github/tasks-list.png) | ![Task Board](.github/tasks-board.png) |
 
+| Spaces & Projects | Calendar |
+|---|---|
+| ![Spaces](.github/spaces.png) | ![Calendar](.github/calendar.png) |
+
 ## Features
 
 - **Spaces** — Top-level workspaces to group projects by team or organization
